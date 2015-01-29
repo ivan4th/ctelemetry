@@ -3,10 +3,12 @@
   <head>
     <title>Common Telemetry</title>
     <link rel="stylesheet" href="dist/style.css">
-    <script src="dist/share.hs"></script>
+    <script src="http://localhost:35729/livereload.js"></script>
+    <script src="dist/share.js"></script>
   </head>
-  <body>
-    <h1>Welcome to Common Telemetry!</h1>
-    <div>Nothing to see here yet...</div>
+  <body ng-app="ctelemetryApp">
+    <div ng-include="'views/navbar.html'"></div>
+    <div class="container primary-content" ng-view=""></div>
+    <div ng-include="'views/common.html'"></div>
   </body>
 </html>

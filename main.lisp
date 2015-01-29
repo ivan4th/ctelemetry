@@ -316,10 +316,12 @@
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (wookie:load-plugins))
 
+(defparameter *public-dir*
+  (uiop:merge-pathnames* #p"public/" ctelemetry-base-config:*base-directory*))
+
 ;; FIXME: shouldn't require NAMESTRING
 (wookie-plugin-export:def-directory-route
-    "/" (namestring
-         (uiop:merge-pathnames* #p"./public/" ctelemetry-base-config:*base-directory*)))
+    "/" (namestring *public-dir*))
 
 #++
 (wookie:defroute (:get "/events") (request response)
@@ -344,6 +346,15 @@
                                                (let ((*read-eval* nil))
                                                  (read-from-string value))))
                               value)))))))
+
+(wookie:defroute (:get "/ct(/.*)?") (request response)
+  (declare (ignore request))
+  (wookie:send-response
+   response
+   :headers '(:content-type "text/html; charset=utf-8")
+   :body (alexandria:read-file-into-string
+          (merge-pathnames #p"index.html" *public-dir*)
+          :external-format :utf-8)))
 
 (defvar *web-listener* nil)
 

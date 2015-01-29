@@ -12,6 +12,8 @@ var prefix = require("gulp-autoprefixer");
 var plumber = require("gulp-plumber");
 var watch;
 
+var htmlGlobs = ["./public/index.html", "./public/views/*.html"];
+
 gulp.task("browserify-nowatch", function(){
   watch = false;
   browserifyShare();
@@ -59,11 +61,17 @@ gulp.task("less", function() {
         .pipe(livereload());
 });
 
+gulp.task("html", function() {
+    return gulp.src(htmlGlobs)
+        .pipe(gulp.dest(''))
+        .pipe(livereload());
+});
+
 // define the browserify-watch as dependencies for this task
 gulp.task("watch", ["less", "browserify-watch"], function(){
   // TBD: "./**/*.less"
-  gulp.watch("./public/*.less",
-             ["less"]);
+  gulp.watch("./public/*.less", ["less"]);
+  gulp.watch(htmlGlobs, ["html"]);
 
   // Start live reload server
   livereload.listen(35729);
