@@ -30,6 +30,7 @@ function browserifyShare(){
     packageCache: {},
     fullPaths: true
   });
+  b.transform("deamdify");
 
   if(watch) {
     // if watch is enable, wrap this bundle inside watchify
@@ -78,3 +79,4 @@ gulp.task("watch", ["less", "browserify-watch"], function(){
 });
 
 gulp.task("default", ["watch"]);
+// TBD: proper deamdify for angular-websocket

@@ -1,1 +1,20 @@
-<div>main content goes here</div>
+<div>
+  <table class="table table-striped">
+    <tbody>
+      <tr>
+        <th>Event</th>
+        <th>Cell</th>
+        <th>Count</th>
+        <th>Value</th>
+        <th>Timestamp</th>
+      </tr>
+      <tr ng-repeat="item in data">
+        <td title="{{item.topic}}">{{ item.topicDisplayName }}</td>
+        <td title="{{item.cell}}">{{ item.cellDisplayName }}</td>
+        <td>{{ item.count }}</td>
+        <td>{{ item.value }}</td>
+        <td>{{ item.timestamp | date:'yyyy-MM-dd HH:mm:ss'}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
