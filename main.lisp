@@ -2,7 +2,6 @@
   (:import-from :blackbird)
   (:import-from :cl-async)
   (:import-from :cl-async-repl)
-  (:import-from :sqlite)
   (:import-from :printv)
   (:import-from :log4cl)
   #++
@@ -16,78 +15,12 @@
   (:import-from :uiop)
   (:import-from :swank) ;; FIXME: doesn't seem to work?
   (:import-from :websocket-driver)
+  (:import-from :ctelemetry/db)
   (:use :cl :alexandria :iterate))
 
 (in-package :ctelemetry/main)
 
 (defparameter *config-file-name* #p".ctelemetryrc")
-
-;; TBD: cell types
-;; TBD: schema versioning
-(defparameter *table-ddl*
-  '("create table if not exists topics (
-        id integer not null primary key autoincrement,
-        topic text not null,
-        display_name text)"
-    "create unique index if not exists topics_topic on topics (topic)"
-    "create table if not exists topic_cells (
-        id integer not null primary key autoincrement,
-        topic_id integer not null references topics(id),
-        name text,
-        display_name text)"
-    "create unique index if not exists topic_cells_topic_id_name
-        on topic_cells (topic_id, name)"
-    "create table if not exists events (
-        id integer not null primary key autoincrement,
-        timestamp real,
-        topic_id integer not null references topics(id))"
-    "create index if not exists events_timestamp on events (timestamp)"
-    "create table if not exists event_values (
-        event_id integer not null references events(id),
-        cell_id integer not null references topic_cells(id),
-        value text,
-        primary key(event_id, cell_id))"
-    "create index if not exists event_values_cell_id on event_values(cell_id)"))
-
-(defparameter *sql-commands*
-  '((ensure-topic
-     "insert or replace into topics (id, topic, display_name)
-      values ((select id from topics where topic = :topic), :topic, :display_name)")
-    (ensure-topic-cell
-     "insert or replace into topic_cells (id, topic_id, name, display_name)
-      values ((select id from topic_cells where topic_id = :topic_id and name = :name),
-              :topic_id, :name, :display_name)")
-    (store-event
-     "insert into events (timestamp, topic_id) values (:timestamp, :topic_id)")
-    (store-event-value
-     "insert into event_values (event_id, cell_id, value)
-      values (:event_id, :cell_id, :value)")
-    (get-events
-     "select t.topic, t.display_name, e.id, e.timestamp, e.topic_id
-      from events e join topics t on e.topic_id = t.id
-      order by e.id desc limit 100")
-    (get-latest
-     ;; FIXME: slow & stupid
-     "select t.topic, t.display_name as topic_display_name,
-             tc.name as cell_name, tc.display_name as cell_display_name,
-             (select count(*)
-                     from event_values ev
-                     join events e on ev.event_id = e.id
-                     where ev.cell_id = tc.id) as count,
-             (select e.timestamp
-                     from event_values ev
-                     join events e on ev.event_id = e.id
-                     where ev.cell_id = tc.id
-                     order by e.id desc limit 1) as ts,
-             (select ev.value
-                     from event_values ev
-                     join events e on ev.event_id = e.id
-                     where ev.cell_id = tc.id
-                     order by e.id desc limit 1) as value
-      from topics t
-           join topic_cells tc on tc.topic_id = t.id
-      where t.topic like :topic_pattern
-      order by topic_display_name, cell_name")))
 
 (defparameter *max-payload-size* 8192)
 (defparameter *db-file* #p"/var/lib/ctelemetry/telemetry.db")
@@ -95,57 +28,12 @@
 (defparameter *mqtt-port* 1883)
 (defparameter *www-port* 8999)
 (defparameter *mqtt-retry-delay-seconds* 5)
-(defvar *db* nil)
 (defvar *mqtt* nil)
 (defvar *mqtt-reconnect-timer* nil)
 (defvar *topic-overrides* (make-hash-table :test #'equal))
 (defvar *cell-overrides* (make-hash-table :test #'equal))
 (defvar *subscribe-topics* '())
 (defvar *sections* '())
-
-(defun bind-params (params)
-  (iter (for (name value) on params by #'cddr)
-        (collect (if (stringp name)
-                     name
-                     (concatenate 'string ":"
-                                  (substitute #\_ #\- (string-downcase name)))))
-        (collect value)))
-
-(defun query-string (query)
-  (cond ((stringp query) query)
-        ((second (assoc query *sql-commands*)))
-        (t
-         (error "bad query spec: ~s" query))))
-
-(macrolet ((def-exec-query (name sqlite-name)
-             `(defun ,name (query &rest params)
-                (apply #',sqlite-name
-                       *db*
-                       (query-string query)
-                       (bind-params params)))))
-  (def-exec-query execute-non-query sqlite:execute-non-query/named)
-  (def-exec-query execute-to-list sqlite:execute-to-list/named)
-  (def-exec-query execute-single sqlite:execute-single/named)
-  (def-exec-query execute-one-row-m-v sqlite:execute-one-row-m-v/named))
-
-(defun ensure-schema ()
-  (sqlite:with-transaction *db*
-    (cond #++((execute-single csdb 'locate-events-table)
-              (%csdb-maybe-upgrade csdb))
-	  (t
-	   (log4cl:log-info "creating db schema from scratch")
-	   (dolist (ddl-command *table-ddl*)
-             (:printv ddl-command)
-	     (execute-non-query ddl-command))
-           #++
-	   (%csdb-set-version csdb (csdb-required-version))))))
-
-(defun db-setup (&optional (db-file ":memory:"))
-  (format t "~%DB: ~s~%" *db*)
-  (unless *db*
-    (setf *db* (sqlite:connect db-file))
-    (format t "~%DB CONN: ~s~%" *db*)
-    (ensure-schema)))
 
 (defun ppr (value &optional title)
   (bb:attach-errback
@@ -168,31 +56,28 @@
    (timestamp    :accessor timestamp     :initarg :timestamp)
    (cell-values  :accessor cell-values   :initarg :cell-values)))
 
-(defun exec-and-get-rowid (query &rest params)
-  (apply #'execute-non-query query params)
-  (sqlite:last-insert-rowid *db*))
-
 (defun store-telemetry-event (event)
-  (sqlite:with-transaction *db*
-    (let* ((topic-id (exec-and-get-rowid
-                      'ensure-topic
+  (ctelemetry/db:with-db-transaction
+    (let* ((topic-id (ctelemetry/db:exec-and-get-rowid
+                      :ensure-topic
                       :topic (topic event)
                       :display-name (display-name event)))
-           (event-id (exec-and-get-rowid
-                      'store-event
+           (event-id (ctelemetry/db:exec-and-get-rowid
+                      :store-event
                       :timestamp (timestamp event)
                       :topic-id topic-id)))
       (iter (for (cell-name cell-value cell-display-name) in (cell-values event))
-            (let ((cell-id (exec-and-get-rowid
-                            'ensure-topic-cell
+            (let ((cell-id (ctelemetry/db:exec-and-get-rowid
+                            :ensure-topic-cell
                             :topic-id topic-id
                             :name (string-downcase cell-name)
                             :display-name cell-display-name)))
-              (execute-non-query 'store-event-value
-                                 :event-id event-id
-                                 :cell-id cell-id
-                                 :value (with-standard-io-syntax
-                                          (prin1-to-string cell-value))))))))
+              (ctelemetry/db:execute-non-query
+               :store-event-value
+               :event-id event-id
+               :cell-id cell-id
+               :value (with-standard-io-syntax
+                        (prin1-to-string cell-value))))))))
 
 (defun current-time ()
   (coerce (i4-diet-utils:universal-time->unix-timestamp (get-universal-time)) 'double-float)
@@ -313,7 +198,7 @@
            (connect)))))
 
 (defun start-telemetry ()
-  (db-setup *db-file*)
+  (ctelemetry/db:db-setup *db-file*)
   (format t "~%SETUP!!!~%")
   (try-connecting))
 
@@ -348,7 +233,7 @@
    response
    :headers '(:content-type "application/json; charset=utf-8")
    :body (st-json:write-json-to-string
-          (execute-to-list 'get-events))))
+          (ctelemetry/db:execute-to-list :get-events))))
 
 (wookie:defroute (:get "/sections") (request response)
   (wookie:send-response
@@ -363,11 +248,12 @@
    :headers '(:content-type "application/json; charset=utf-8")
    :body (st-json:write-json-to-string
           (iter (for (topic topic-display-name cell-name cell-display-name count ts value)
-                     in (execute-to-list 'get-latest
-                                         :topic-pattern
-                                         (concatenate 'string
-                                                      (first args) ;; this handles NIL case, too
-                                                      "%")))
+                 in (ctelemetry/db:execute-to-list
+                     :get-latest
+                     :topic-pattern
+                     (concatenate 'string
+                      (first args) ;; this handles NIL case, too
+                      "%")))
                 (collect
                     (list topic
                           (or (gethash topic *topic-overrides*) topic-display-name)
@@ -461,7 +347,6 @@
    '(:swank-repl :swank-asdf :swank-arglists :swank-fuzzy :swank-indentation
      :swank-fancy-inspector :swank-c-p-c :swank-util :swank-presentations
      :swank-listener-hooks))
-  (setf *db* nil)
   (sb-ext:save-lisp-and-die
    "ctelemetry"
    :executable t
@@ -491,9 +376,6 @@
 ;; TBD: fix timestamps coming from dscope!!!!
 ;; TBD: handle telemetry-error -- and warn
 ;; TBD: check max payload size
-;; TBD: plain parallel running won't cut it --
-;; should not use the same connection from multiple threads.
-;; so, need to pick a connection from a pool and put it back later
 
 #++
 (store-telemetry-event (parse-event "/zzz/qqqrr" "(\"whatever\" 1421742558.099134d0 (:cell-one 42d0 \"cell one\") (:cell-two 43d0 \"cell two\"))"))
