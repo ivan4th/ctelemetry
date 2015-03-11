@@ -1,6 +1,5 @@
 (defpackage :ctelemetry/main
   (:import-from :blackbird)
-  (:import-from :lparallel)
   (:import-from :cl-async)
   (:import-from :cl-async-repl)
   (:import-from :sqlite)
@@ -20,10 +19,6 @@
   (:use :cl :alexandria :iterate))
 
 (in-package :ctelemetry/main)
-
-(defun setup-lparallel ()
-  (unless lparallel:*kernel*
-    (setf lparallel:*kernel* (lparallel:make-kernel 10))))
 
 (defparameter *config-file-name* #p".ctelemetryrc")
 
@@ -106,51 +101,6 @@
 (defvar *subscribe-topics* '())
 (defvar *sections* '())
 
-;; TBD: use lparallel:submit-task (?)
-;; TBD: use a pool of non-single-shot notifiers
-
-(defun %parallel (thunk)
-  (bb:with-promise (resolve reject)
-    (let* ((return-values '())
-           (err nil)
-           (calledp nil)
-           (notifier (as:make-notifier
-                      #'(lambda ()
-                          (if err
-                              (reject err)
-                              (resolve (values-list return-values)))))))
-      (setf *parallel-return-values* nil)
-      (lparallel:future
-        (unwind-protect
-             (handler-case
-                 (funcall thunk)
-               (error (condition)
-                 (setf calledp t err condition))
-               (:no-error (&rest values)
-                 (setf calledp t return-values values)))
-          (unless calledp
-            (setf err (make-condition
-                       'simple-error
-                       :format-control "PARALLEL: unexpected nonlocal exit")))
-          (as:trigger-notifier notifier))))))
-
-(defmacro parallel-eval (&body body)
-  `(%parallel #'(lambda () ,@body)))
-
-#++
-(defmacro define-parallel-alias (fn relay-to)
-  (with-gensyms (args)
-    `(defun ,fn (&rest ,args)
-       (parallel-eval (apply #',relay-to ,args)))))
-
-(defmacro defun-parallel (name (&rest args) &body body)
-  `(defun ,name ,args (parallel-eval ,@body)))
-
-#++
-(define-parallel-alias sqlite-connect sqlite:connect)
-#++
-(define-parallel-alias sqlite-disconnect sqlite:disconnect)
-
 (defun bind-params (params)
   (iter (for (name value) on params by #'cddr)
         (collect (if (stringp name)
@@ -188,7 +138,7 @@
            #++
 	   (%csdb-set-version csdb (csdb-required-version))))))
 
-(defun #++ defun-parallel db-setup (&optional (db-file ":memory:"))
+(defun db-setup (&optional (db-file ":memory:"))
   (format t "~%DB: ~s~%" *db*)
   (unless *db*
     (setf *db* (sqlite:connect db-file))
@@ -318,8 +268,6 @@
       (broadcast-event event))))
 
 (defun start-telemetry ()
-  #++
-  (setup-lparallel)
   (db-setup *db-file*)
   (format t "~%SETUP!!!~%")
   (bb:alet ((conn (mqtt:connect
