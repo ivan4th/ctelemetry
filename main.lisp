@@ -94,8 +94,10 @@
 (defparameter *mqtt-host* "localhost")
 (defparameter *mqtt-port* 1883)
 (defparameter *www-port* 8999)
+(defparameter *mqtt-retry-delay-seconds* 5)
 (defvar *db* nil)
 (defvar *mqtt* nil)
+(defvar *mqtt-reconnect-timer* nil)
 (defvar *topic-overrides* (make-hash-table :test #'equal))
 (defvar *cell-overrides* (make-hash-table :test #'equal))
 (defvar *subscribe-topics* '())
@@ -267,22 +269,61 @@
       (store-telemetry-event event)
       (broadcast-event event))))
 
+(defun try-connecting ()
+  (labels ((later ()
+             (unless *mqtt-reconnect-timer*
+               (log4cl:log-info "waiting for ~a seconds before retrying the connection"
+                                *mqtt-retry-delay-seconds*)
+               (setf *mqtt-reconnect-timer*
+                     (as:with-delay (*mqtt-retry-delay-seconds*)
+                       (setf *mqtt-reconnect-timer* nil)
+                       (try-connecting)))))
+           (connect ()
+             (log4cl:log-info "trying to connect to MQTT broker at ~a:~a"
+                              *mqtt-host* *mqtt-port*)
+             (bb:chain
+                 (mqtt:connect *mqtt-host*
+                               :port *mqtt-port*
+                               :on-message
+                               #'(lambda (message)
+                                   (handle-mqtt-message (mqtt:mqtt-message-topic message)
+                                                        (babel:octets-to-string
+                                                         (mqtt:mqtt-message-payload message)
+                                                         :encoding :utf-8
+                                                         :errorp nil)))
+                               :error-handler
+                               #'(lambda (c)
+                                   (setf *mqtt* nil)
+                                   (log4cl:log-warn "MQTT error: ~a" c)
+                                   (later))
+                               :clean-session nil)
+               (:then (conn)
+                 (log4cl:log-info "connected to MQTT broker")
+                 (setf *mqtt* conn)
+                 (dolist (topic *subscribe-topics*)
+                   (mqtt:subscribe conn topic 2)))
+               (:catch (c)
+                 (log4cl:log-warn "MQTT connecting failed: ~a" c)
+                 (later)))))
+    (cond (*mqtt*
+           (log4cl:log-info "already connected"))
+          (*mqtt-reconnect-timer*
+           (log4cl:log-info "already trying to connect"))
+          (t
+           (connect)))))
+
 (defun start-telemetry ()
   (db-setup *db-file*)
   (format t "~%SETUP!!!~%")
-  (bb:alet ((conn (mqtt:connect
-                   *mqtt-host*
-                   :port *mqtt-port*
-                   :on-message
-                   #'(lambda (message)
-                       (handle-mqtt-message (mqtt:mqtt-message-topic message)
-                                            (babel:octets-to-string
-                                             (mqtt:mqtt-message-payload message)
-                                             :encoding :utf-8
-                                             :errorp nil))))))
-    (setf *mqtt* conn)
-    (dolist (topic *subscribe-topics*)
-      (mqtt:subscribe conn topic 2))))
+  (try-connecting))
+
+(defun stop-telemetry ()
+  (when *mqtt*
+    (mqtt:disconnect *mqtt*)
+    (setf *mqtt* nil))
+  (when *mqtt-reconnect-timer*
+    (as:free-event *mqtt-reconnect-timer*)
+    (setf *mqtt-reconnect-timer* nil)))
 
 ;;;; web
 
