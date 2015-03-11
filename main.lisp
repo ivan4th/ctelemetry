@@ -16,6 +16,7 @@
   (:import-from :swank) ;; FIXME: doesn't seem to work?
   (:import-from :websocket-driver)
   (:import-from :ctelemetry/db)
+  (:import-from :ctelemetry/db-versions)
   (:use :cl :alexandria :iterate))
 
 (in-package :ctelemetry/main)
@@ -71,13 +72,20 @@
                             :ensure-topic-cell
                             :topic-id topic-id
                             :name (string-downcase cell-name)
-                            :display-name cell-display-name)))
+                            :display-name cell-display-name))
+                  (value-str (with-standard-io-syntax
+                               (prin1-to-string cell-value))))
               (ctelemetry/db:execute-non-query
                :store-event-value
                :event-id event-id
                :cell-id cell-id
-               :value (with-standard-io-syntax
-                        (prin1-to-string cell-value))))))))
+               :value value-str)
+              (ctelemetry/db:execute-non-query
+               :update-cell
+               :timestamp (timestamp event)
+               :value value-str
+               :topic-id topic-id
+               :cell-id cell-id))))))
 
 (defun current-time ()
   (coerce (i4-diet-utils:universal-time->unix-timestamp (get-universal-time)) 'double-float)
@@ -208,7 +216,8 @@
     (setf *mqtt* nil))
   (when *mqtt-reconnect-timer*
     (as:free-event *mqtt-reconnect-timer*)
-    (setf *mqtt-reconnect-timer* nil)))
+    (setf *mqtt-reconnect-timer* nil))
+  (ctelemetry/db:db-disconnect))
 
 ;;;; web
 
