@@ -409,7 +409,7 @@
                 (log4cl:log-debug "~&inbound ws data: ~s~%" (wsd:event-data event))))
     (wsd:on :close ws
             #'(lambda (event)
-                (log4cl:log-info "LiveReload client disconnected~@[: ~a~]"
+                (log4cl:log-info "WebSocket client disconnected~@[: ~a~]"
                                  (wsd:event-reason event))
                 (remhash ws *connected-clients*)))
     (wsd:start-connection ws)))
