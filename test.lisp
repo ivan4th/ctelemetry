@@ -32,7 +32,7 @@
           #'(lambda (json)
               (vector-push-extend json (rec-items fixture))))
         (ctelemetry/event:*current-time-function*
-          #'(lambda () (fake-time fixture))))l
+          #'(lambda () (fake-time fixture))))
     (clrhash ctelemetry/event:*cell-overrides*)
     (clrhash ctelemetry/event:*topic-overrides*)
     (call-next-method)))
