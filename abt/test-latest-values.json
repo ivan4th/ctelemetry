@@ -1,0 +1,57 @@
+[
+  {
+    "body": [
+              [
+                "/somesensors/temp1",
+                "Temp One",
+                "temp1",
+                "Temp",
+                2,
+                1.42e+9,
+                15
+              ],
+              [
+                "/somesensors/temp2",
+                "Temp Two",
+                "temp2",
+                "Temp",
+                1,
+                1.42e+9,
+                42
+              ],
+              [
+                "/more-sensors/voltage",
+                "voltage",
+                "voltage",
+                "voltage",
+                1,
+                1.42e+9,
+                4.5e+0
+              ]
+            ],
+    "url": "GET /latest"
+  },
+  {
+    "body": [
+              [
+                "/somesensors/temp1",
+                "Temp One",
+                "temp1",
+                "Temp",
+                2,
+                1.42e+9,
+                15
+              ],
+              [
+                "/somesensors/temp2",
+                "Temp Two",
+                "temp2",
+                "Temp",
+                1,
+                1.42e+9,
+                42
+              ]
+            ],
+    "url": "GET /latest/somesensors/"
+  }
+]

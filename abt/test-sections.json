@@ -1,0 +1,11 @@
+[
+  {
+    "body": {
+              "sections": [
+                            ["/more-sensors/", "More Sensors"],
+                            ["/somesensors/", "Some Sensors"]
+                          ]
+            },
+    "url": "GET /sections"
+  }
+]
