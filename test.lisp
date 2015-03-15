@@ -8,16 +8,24 @@
 
 (define-constant +base-time+ 1420000000)
 
-(defparameter *sample-messages*
-  '(("/more-sensors/voltage" "4.5")
-    ("/somesensors/temp1" "12")
-    ("/somesensors/temp1" "15")
-    ("/somesensors/temp2" "42")))
-
 (define-fixture ctelemetry-fixture (vtf-json:abt-json-output-mixin abt-fixture)
   ((rec-items :accessor rec-items)
    (fake-time :accessor fake-time))
   (:default-initargs :data-location '(:asdf ctelemetry #p"abt/")))
+
+(defparameter *sample-messages*
+  (list '("/more-sensors/voltage" "4.5")
+        '("/somesensors/temp1" "12")
+        '("/somesensors/temp1" "15")
+        '("/somesensors/temp2" "42")
+        (list "/more-sensors/events/whatever"
+              #'(lambda (fixture)
+                  (prin1-to-string
+                   (list "Whatever"
+                         (fake-time fixture)
+                         '(:cell1 42d0 "Cell One")
+                         '(:cell2 42.42d0 "Cell Two")))))))
+
 
 (defmethod invoke-test-case-outer ((fixture ctelemetry-fixture) test-case teardown-p)
   (setf (rec-items fixture) (make-array 100 :fill-pointer 0 :adjustable t)
@@ -43,6 +51,7 @@
   (ctelemetry/event:add-subscription-topic "/somesensors/temp1")
   (ctelemetry/event:add-subscription-topic "/somesensors/temp2")
   (ctelemetry/event:add-subscription-topic "/more-sensors/voltage")
+  (ctelemetry/event:add-subscription-topic "/+/events/#")
   (ctelemetry/event:define-topic "/somesensors/temp1" "Temp One"
     '(("temp1" "Temp")))
   (ctelemetry/event:define-topic "/somesensors/temp2" "Temp Two"
@@ -65,7 +74,10 @@
 
 (defun receive-some-values ()
   (iter (for (topic payload) in *sample-messages*)
-        (ctelemetry/event:handle-mqtt-message topic payload)
+        (ctelemetry/event:handle-mqtt-message
+         topic (if (functionp payload)
+                   (funcall payload *fixture*)
+                   payload))
         (elapse 10)))
 
 (deftest test-latest-values ()  (ctelemetry-fixture)

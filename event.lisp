@@ -119,13 +119,15 @@
 (defun parse-event (topic event-str)
   (when (> (length event-str) *max-payload-size*)
     (telemetry-error "payload too large for topic ~s" topic))
-  (let ((parsed-payload
-          (if (emptyp event-str)
-              ""
-              (handler-case
-                  (parse-number:parse-number
-                   (substitute #\d #\e event-str :test #'char=))
-                (parse-error () event-str)))))
+  (let ((parsed-payload (handler-case
+                            (with-standard-io-syntax
+                              (let ((*read-eval* nil)
+                                    (*package* (find-package :ctelemetry/main)))
+                                (read-from-string event-str)))
+                          (end-of-file ()
+                            (telemetry-error "reader: eof"))
+                          (reader-error (c)
+                            (telemetry-error "reader error: ~a" c)))))
     (if (atom parsed-payload)
         (make-simple-telemetry-event topic parsed-payload)
         (make-complex-telemetry-event topic parsed-payload))))

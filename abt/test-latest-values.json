@@ -2,6 +2,24 @@
   {
     "body": [
               [
+                "/more-sensors/events/whatever",
+                "Whatever",
+                "cell1",
+                "Cell One",
+                1,
+                1.42e+9,
+                4.2e+1
+              ],
+              [
+                "/more-sensors/events/whatever",
+                "Whatever",
+                "cell2",
+                "Cell Two",
+                1,
+                1.42e+9,
+                4.2419997e+1
+              ],
+              [
                 "/somesensors/temp1",
                 "Temp One",
                 "temp1",
