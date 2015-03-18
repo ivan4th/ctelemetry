@@ -9,8 +9,7 @@
 (define-constant +base-time+ 1420000000)
 
 (define-fixture ctelemetry-fixture (vtf-json:abt-json-output-mixin abt-fixture)
-  ((rec-items :accessor rec-items)
-   (fake-time :accessor fake-time))
+  ((fake-time :accessor fake-time))
   (:default-initargs :data-location '(:asdf ctelemetry #p"abt/")))
 
 (defparameter *sample-messages*
@@ -28,17 +27,14 @@
 
 
 (defmethod invoke-test-case-outer ((fixture ctelemetry-fixture) test-case teardown-p)
-  (setf (rec-items fixture) (make-array 100 :fill-pointer 0 :adjustable t)
-        (fake-time fixture) +base-time+)
+  (setf (fake-time fixture) +base-time+)
   (let ((ctelemetry/db::*db* nil)
         (ctelemetry/event:*sections* '())
         (ctelemetry/event:*cell-overrides*
           (copy-hash-table ctelemetry/event:*cell-overrides*))
         (ctelemetry/event:*topic-overrides*
           (copy-hash-table ctelemetry/event:*topic-overrides*))
-        (ctelemetry/event:*event-broadcast-function*
-          #'(lambda (json)
-              (vector-push-extend json (rec-items fixture))))
+        (ctelemetry/event:*event-broadcast-function* #'<<)
         (ctelemetry/event:*current-time-function*
           #'(lambda () (fake-time fixture))))
     (clrhash ctelemetry/event:*cell-overrides*)
@@ -62,7 +58,6 @@
 
 (defmethod setup :after ((fixture ctelemetry-fixture))
   (configure-for-test)
-  (:printv (hash-table-alist ctelemetry/event:*cell-overrides*))
   (ctelemetry/db:db-setup ":memory:"))
 
 (defmethod teardown :after ((fixture ctelemetry-fixture))

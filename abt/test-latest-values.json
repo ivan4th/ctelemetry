@@ -1,5 +1,35 @@
 [
   {
+    "cells": [["voltage", 4.5e+0]],
+    "displayName": "voltage",
+    "topic": "/more-sensors/voltage",
+    "ts": 1420000000
+  },
+  {
+    "cells": [["temp1", 12]],
+    "displayName": "temp1",
+    "topic": "/somesensors/temp1",
+    "ts": 1420000010
+  },
+  {
+    "cells": [["temp1", 15]],
+    "displayName": "temp1",
+    "topic": "/somesensors/temp1",
+    "ts": 1420000020
+  },
+  {
+    "cells": [["temp2", 42]],
+    "displayName": "temp2",
+    "topic": "/somesensors/temp2",
+    "ts": 1420000030
+  },
+  {
+    "cells": [["cell1", 4.2e+1], ["cell2", 4.2419997e+1]],
+    "displayName": "Whatever",
+    "topic": "/more-sensors/events/whatever",
+    "ts": 1420000040
+  },
+  {
     "body": [
               [
                 "/more-sensors/events/whatever",
