@@ -40,8 +40,8 @@
                         ],
               "topics": [
                           [4, "/more-sensors/events/whatever", "Whatever"],
-                          [2, "/somesensors/temp1", "temp1"],
-                          [3, "/somesensors/temp2", "temp2"],
+                          [2, "/somesensors/temp1", "Temp One"],
+                          [3, "/somesensors/temp2", "Temp Two"],
                           [1, "/more-sensors/voltage", "voltage"]
                         ]
             },
@@ -56,8 +56,8 @@
                         ],
               "topics": [
                           [4, "/more-sensors/events/whatever", "Whatever"],
-                          [2, "/somesensors/temp1", "temp1"],
-                          [3, "/somesensors/temp2", "temp2"],
+                          [2, "/somesensors/temp1", "Temp One"],
+                          [3, "/somesensors/temp2", "Temp Two"],
                           [1, "/more-sensors/voltage", "voltage"]
                         ]
             },
@@ -98,8 +98,8 @@
               "events": [[4, 1.42000003e9, 3], [3, 1.42000002e9, 2]],
               "topics": [
                           [4, "/more-sensors/events/whatever", "Whatever"],
-                          [2, "/somesensors/temp1", "temp1"],
-                          [3, "/somesensors/temp2", "temp2"],
+                          [2, "/somesensors/temp1", "Temp One"],
+                          [3, "/somesensors/temp2", "Temp Two"],
                           [1, "/more-sensors/voltage", "voltage"]
                         ]
             },
@@ -114,8 +114,8 @@
                         ],
               "topics": [
                           [4, "/more-sensors/events/whatever", "Whatever"],
-                          [2, "/somesensors/temp1", "temp1"],
-                          [3, "/somesensors/temp2", "temp2"],
+                          [2, "/somesensors/temp1", "Temp One"],
+                          [3, "/somesensors/temp2", "Temp Two"],
                           [1, "/more-sensors/voltage", "voltage"]
                         ]
             },

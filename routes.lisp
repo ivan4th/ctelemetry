@@ -36,7 +36,10 @@
   (let ((topic-pattern (topic-pattern (first args))))
     (st-json:jso
      "topics"
-     (ctelemetry/db-commands:get-topics :topic-pattern topic-pattern)
+     (iter (for (id topic display-name) in
+            (ctelemetry/db-commands:get-topics :topic-pattern topic-pattern))
+           (collect (list id topic
+                          (ctelemetry/event:topic-display-name topic display-name))))
      "events"
      (let ((events (ctelemetry/db-commands:get-events
                     :count *default-log-count*
