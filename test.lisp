@@ -86,7 +86,7 @@
 (deftest test-log () (ctelemetry-fixture)
   (receive-some-values)
   (invoke-request :get "/log")
-  (invoke-request :get "/log/3+2")
+  (invoke-request :get "/log?filter=2,3")
   ;; TBD: topic name filter
   ;; TBD: start date
   )

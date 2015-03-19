@@ -57,6 +57,6 @@
                           [1, "/more-sensors/voltage", "voltage"]
                         ]
             },
-    "request": "GET /log/3+2"
+    "request": "GET /log?filter=2,3"
   }
 ]

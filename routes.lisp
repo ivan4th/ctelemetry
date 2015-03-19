@@ -30,15 +30,15 @@
                                           (read-from-string value))))
                        value))))))
 
-(ctelemetry/web:define-route log (:get "^/log(?:/(.*))?") (args)
+(ctelemetry/web:define-route log (:get "^/log" #++"^/log(?:/(.*))?") ()
   (st-json:jso
    "topics"
    (ctelemetry/db-commands:get-topics)
    "events"
    (ctelemetry/db-commands:get-events
     :count *default-log-count*
-    :topic-ids (when (first args)
-                 (iter (for id in (split-sequence:split-sequence #\+ (first args)))
+    :topic-ids (when-let ((filter (ctelemetry/web:get-var "filter")))
+                 (iter (for id in (split-sequence:split-sequence #\, filter))
                        (:printv id)
                        (handler-case
                            (collect (:printv (parse-integer id)))
