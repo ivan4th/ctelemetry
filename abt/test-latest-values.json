@@ -1,6 +1,6 @@
 [
   {
-    "cells": [["voltage", 4.5e+0]],
+    "cells": [["voltage", 4.5e0]],
     "displayName": "voltage",
     "topic": "/more-sensors/voltage",
     "ts": 1420000000
@@ -24,7 +24,7 @@
     "ts": 1420000030
   },
   {
-    "cells": [["cell1", 4.2e+1], ["cell2", 4.2419997e+1]],
+    "cells": [["cell1", 42.0e0], ["cell2", 42.42e0]],
     "displayName": "Whatever",
     "topic": "/more-sensors/events/whatever",
     "ts": 1420000040
@@ -38,8 +38,8 @@
                            "cell1",
                            "Cell One",
                            1,
-                           1.42e+9,
-                           4.2e+1
+                           1.42000004e9,
+                           42.0e0
                          ],
                          [
                            "/more-sensors/events/whatever",
@@ -47,8 +47,8 @@
                            "cell2",
                            "Cell Two",
                            1,
-                           1.42e+9,
-                           4.2419997e+1
+                           1.42000004e9,
+                           42.42e0
                          ],
                          [
                            "/somesensors/temp1",
@@ -56,7 +56,7 @@
                            "temp1",
                            "Temp",
                            2,
-                           1.42e+9,
+                           1.42000002e9,
                            15
                          ],
                          [
@@ -65,7 +65,7 @@
                            "temp2",
                            "Temp",
                            1,
-                           1.42e+9,
+                           1.42000003e9,
                            42
                          ],
                          [
@@ -74,8 +74,8 @@
                            "voltage",
                            "voltage",
                            1,
-                           1.42e+9,
-                           4.5e+0
+                           1.42e9,
+                           4.5e0
                          ]
                        ]
             },
@@ -90,7 +90,7 @@
                            "temp1",
                            "Temp",
                            2,
-                           1.42e+9,
+                           1.42000002e9,
                            15
                          ],
                          [
@@ -99,7 +99,7 @@
                            "temp2",
                            "Temp",
                            1,
-                           1.42e+9,
+                           1.42000003e9,
                            42
                          ]
                        ]

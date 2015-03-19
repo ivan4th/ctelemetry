@@ -11,14 +11,16 @@
 (ctelemetry/web:define-route sections (:get "^/sections") ()
   (st-json:jso "sections" ctelemetry/event:*sections*))
 
+(defun topic-pattern (arg)
+   ;; this handles NIL case, too
+  (concatenate 'string arg "%"))
+
 (ctelemetry/web:define-route latest (:get "^/latest(/.*)?") (args)
   (st-json:jso
    "cells"
    (iter (for (topic topic-display-name cell-name cell-display-name count ts value)
           in (ctelemetry/db-commands:get-latest
-              :topic-pattern (concatenate 'string
-                              (first args) ;; this handles NIL case, too
-                              "%")))
+              :topic-pattern (topic-pattern (first args))))
          (collect
              (list topic
                    (ctelemetry/event:topic-display-name topic topic-display-name)
@@ -30,16 +32,18 @@
                                           (read-from-string value))))
                        value))))))
 
-(ctelemetry/web:define-route log (:get "^/log" #++"^/log(?:/(.*))?") ()
-  (st-json:jso
-   "topics"
-   (ctelemetry/db-commands:get-topics)
-   "events"
-   (ctelemetry/db-commands:get-events
-    :count *default-log-count*
-    :topic-ids (when-let ((filter (ctelemetry/web:get-var "filter")))
-                 (iter (for id in (split-sequence:split-sequence #\, filter))
-                       (:printv id)
-                       (handler-case
-                           (collect (:printv (parse-integer id)))
-                         (parse-error ())))))))
+(ctelemetry/web:define-route log (:get "^/log(/.*)?") (args)
+  (let ((topic-pattern (topic-pattern (first args))))
+    (st-json:jso
+     "topics"
+     (ctelemetry/db-commands:get-topics :topic-pattern topic-pattern)
+     "events"
+     (let ((events (ctelemetry/db-commands:get-events
+                    :count *default-log-count*
+                    :topic-pattern topic-pattern
+                    :topic-ids (when-let ((filter (ctelemetry/web:get-var "filter")))
+                                 (iter (for id in (split-sequence:split-sequence #\, filter))
+                                       (handler-case
+                                           (collect (parse-integer id))
+                                         (parse-error ())))))))
+       events))))

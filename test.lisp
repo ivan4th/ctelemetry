@@ -87,7 +87,10 @@
   (receive-some-values)
   (invoke-request :get "/log")
   (invoke-request :get "/log?filter=2,3")
-  ;; TBD: topic name filter
+  (invoke-request :get "/log/more-sensors/")
+  (invoke-request :get "/log/more-sensors/?filter=4")
+  ;; non-realistic query (topic 2 is not under /more-sensors)
+  (invoke-request :get "/log/more-sensors/?filter=2,4")
   ;; TBD: start date
   )
 

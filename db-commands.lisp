@@ -73,21 +73,29 @@
    where topic_id = :topic_id and id = :cell_id")
 
 (defsql get-events/no-filter :list
-  "select id, timestamp, topic_id from events order by id desc limit :count")
+  "select e.id, e.timestamp, e.topic_id
+   from events e
+   join topics t on e.topic_id = t.id
+   where t.topic like :topic_pattern
+   order by e.id desc limit :count")
 
 (defsql get-topics :list
-  "select id, topic, display_name from topics order by display_name")
+  "select id, topic, display_name from topics
+   where topic like :topic_pattern
+   order by display_name")
 
-(defun get-events (&key count topic-ids)
+(defun get-events (&key count topic-ids topic-pattern)
   (assert (every #'integerp topic-ids))
   (if (null topic-ids)
-      (get-events/no-filter :count count)
+      (get-events/no-filter :topic-pattern topic-pattern :count count)
       (ctelemetry/db:execute-to-list
        (with-standard-io-syntax
-         (format nil "select id, timestamp, topic_id ~
-                      from events where topic_id in (~{~d~^,~}) ~
-                      order by id desc limit :count"
+         (format nil "select e.id, e.timestamp, e.topic_id ~
+                      from events e join topics t on e.topic_id = t.id ~
+                      where t.topic like :topic_pattern and e.topic_id in (~{~d~^,~}) ~
+                      order by e.id desc limit :count"
                  topic-ids))
+       :topic-pattern topic-pattern
        :count count)))
 
 ;; "2015-01-30 10:05:48"
