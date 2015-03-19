@@ -92,5 +92,33 @@
                         ]
             },
     "request": "GET /log/more-sensors/?filter=2,4"
+  },
+  {
+    "body": {
+              "events": [[4, 1.42000003e9, 3], [3, 1.42000002e9, 2]],
+              "topics": [
+                          [4, "/more-sensors/events/whatever", "Whatever"],
+                          [2, "/somesensors/temp1", "temp1"],
+                          [3, "/somesensors/temp2", "temp2"],
+                          [1, "/more-sensors/voltage", "voltage"]
+                        ]
+            },
+    "request": "GET /log?filter=2,3&start=1420000020"
+  },
+  {
+    "body": {
+              "events": [
+                          [5, 1.42000004e9, 4],
+                          [4, 1.42000003e9, 3],
+                          [3, 1.42000002e9, 2]
+                        ],
+              "topics": [
+                          [4, "/more-sensors/events/whatever", "Whatever"],
+                          [2, "/somesensors/temp1", "temp1"],
+                          [3, "/somesensors/temp2", "temp2"],
+                          [1, "/more-sensors/voltage", "voltage"]
+                        ]
+            },
+    "request": "GET /log?start=1420000020"
   }
 ]

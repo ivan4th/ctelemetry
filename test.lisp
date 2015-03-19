@@ -91,8 +91,8 @@
   (invoke-request :get "/log/more-sensors/?filter=4")
   ;; non-realistic query (topic 2 is not under /more-sensors)
   (invoke-request :get "/log/more-sensors/?filter=2,4")
-  ;; TBD: start date
-  )
+  (invoke-request :get "/log?filter=2,3&start=1420000020")
+  (invoke-request :get "/log?start=1420000020"))
 
 ;; TBD: specify overrides for plain values
 ;; TBD: test multi-value events

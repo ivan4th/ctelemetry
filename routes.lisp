@@ -45,5 +45,8 @@
                                  (iter (for id in (split-sequence:split-sequence #\, filter))
                                        (handler-case
                                            (collect (parse-integer id))
-                                         (parse-error ())))))))
+                                         (parse-error ()))))
+                    :start (or (when-let ((start (ctelemetry/web:get-var "start")))
+                                 (parse-integer start :junk-allowed t))
+                               0))))
        events))))
