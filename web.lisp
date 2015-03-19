@@ -69,7 +69,9 @@
 
 (setup-public)
 
-(defmacro define-route (name (method resource &rest options) (&optional args-var) &body body)
+(defmacro define-route (name (method resource &rest options &key (priority nil priority-p))
+                        (&optional args-var) &body body)
+  (declare (ignore priority)) ;; included in options if present
   (let ((func-name (symbolicate 'web-route- name)))
     (with-gensyms (request response var-name)
       `(progn
@@ -79,7 +81,9 @@
                 `(defun ,func-name (,dummy)
                    (declare (ignore ,dummy))
                    ,@body)))
-         (wookie:defroute (,method ,resource ,@options)
+         (wookie:defroute (,method ,resource ,@options
+                           ;; priority defaults to 1 to override the / route
+                           ,@(unless priority-p '(:priority 1)))
              (,request ,response ,@(when args-var (list args-var)))
            (let ((*query-var-func*
                    #'(lambda (,var-name)
