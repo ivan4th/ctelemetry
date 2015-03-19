@@ -38,7 +38,7 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
           topicPrefix: "/",
           displayName: "All" // FIXME (utf-8)
         }
-      ].concat(result.map(function (section) {
+      ].concat(result.sections.map(function (section) {
         return {
           topicPrefix: section[0],
           displayName: section[1]
