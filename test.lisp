@@ -63,9 +63,12 @@
 (defmethod teardown :after ((fixture ctelemetry-fixture))
   (ctelemetry/db:db-disconnect))
 
+(defun invoke-request (method url)
+  (<< (st-json:jso "request" (format nil "~a ~a" method url)
+                   "body" (ctelemetry/web:invoke-route method url))))
+
 (deftest test-sections () (ctelemetry-fixture)
-  (<< (st-json:jso "url" "GET /sections"
-                   "body" (ctelemetry/routes::web-route-sections))))
+  (invoke-request :get "/sections"))
 
 (defun receive-some-values ()
   (iter (for (topic payload) in *sample-messages*)
@@ -77,17 +80,13 @@
 
 (deftest test-latest-values ()  (ctelemetry-fixture)
   (receive-some-values)
-  (<< (st-json:jso "url" "GET /latest"
-                   "body" (ctelemetry/routes::web-route-latest '())))
-  (<< (st-json:jso "url" "GET /latest/somesensors/"
-                   "body" (ctelemetry/routes::web-route-latest '("/somesensors")))))
+  (invoke-request :get "/latest")
+  (invoke-request :get "/latest/somesensors/"))
 
 (deftest test-log () (ctelemetry-fixture)
   (receive-some-values)
-  (<< (st-json:jso "url" "GET /log"
-                   "body" (ctelemetry/routes::web-route-log '())))
-  (<< (st-json:jso "url" "GET /log/3+2"
-                   "body" (ctelemetry/routes::web-route-log '("3+2"))))
+  (invoke-request :get "/log")
+  (invoke-request :get "/log/3+2")
   ;; TBD: topic name filter
   ;; TBD: start date
   )

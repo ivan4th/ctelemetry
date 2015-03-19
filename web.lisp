@@ -2,9 +2,11 @@
   (:import-from :wookie)
   (:import-from :log4cl)
   (:import-from :websocket-driver)
+  (:import-from :puri)
   (:use :cl :alexandria :iterate)
   (:export #:define-route
            #:ws-broadcast
+           #:invoke-route
            ;; FIXME
            #:setup-public
            #:*public-dir*))
@@ -12,12 +14,14 @@
 (in-package :ctelemetry/web)
 
 (defparameter *www-port* 8999)
+(defparameter *public-dir*
+  (uiop:merge-pathnames* #p"public/" ctelemetry-base-config:*base-directory*))
+(defvar *connected-clients* (make-hash-table))
+(defvar *defined-routes* (make-hash-table))
 
 ;; FIXME
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (wookie:load-plugins))
-
-(defvar *connected-clients* (make-hash-table))
 
 (defun make-ws-server (req)
   (let ((ws (wsd:make-server req nil :type :wookie)))
@@ -49,9 +53,6 @@
   (iter (for (ws nil) in-hashtable *connected-clients*)
         (wsd:send ws (st-json:write-json-to-string message))))
 
-(defparameter *public-dir*
-  (uiop:merge-pathnames* #p"public/" ctelemetry-base-config:*base-directory*))
-
 (defun setup-public ()
   ;; FIXME: shouldn't require NAMESTRING
   (wookie-plugin-export:def-directory-route
@@ -60,17 +61,39 @@
 (setup-public)
 
 (defmacro define-route (name (method resource &rest options) (&optional args-var) &body body)
-  (let ((func-name (symbolicate 'web-route- name))
-        (maybe-args (when args-var (list args-var))))
+  (let ((func-name (symbolicate 'web-route- name)))
     (with-gensyms (request response)
       `(progn
-         (defun ,func-name (,@maybe-args) ,@body)
+         ,(if args-var
+              `(defun ,func-name (,args-var) ,@body)
+              (with-gensyms (dummy)
+                `(defun ,func-name (,dummy)
+                   (declare (ignore ,dummy))
+                   ,@body)))
          (wookie:defroute (,method ,resource ,@options)
-             (,request ,response ,@maybe-args)
+             (,request ,response ,@(when args-var (list args-var)))
            (declare (ignore ,request))
            (wookie:send-response
             ,response
             :headers '(:content-type "application/json; charset=utf-8")
-            :body (st-json:write-json-to-string (,func-name ,@maybe-args))))))))
+            :body (st-json:write-json-to-string
+                   ;; ,args-var may be NIL
+                   (,func-name ,args-var))))
+         (setf (gethash ',name *defined-routes*)
+               (list ',method ,resource ',func-name))))))
+
+(defun invoke-route (method url)
+  "Invoke a route corresponding to URL using METHOD"
+  ;; TBD: post params
+  (let ((uri (puri:parse-uri url)))
+    (iter (for (route-method route-resource route-func)
+           in (hash-table-values *defined-routes*))
+          (when (eq route-method method)
+            (multiple-value-bind (whole-match groups)
+                (cl-ppcre:scan-to-strings route-resource (puri:uri-path uri))
+              (when whole-match
+                (return (funcall route-func (coerce groups 'list))))))
+          (finally
+              (error "route not found for url: ~s" url)))))
 
 ;; TBD: tickets (for auth)

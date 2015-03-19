@@ -8,10 +8,10 @@
 
 (defparameter *default-log-count* 1000)
 
-(ctelemetry/web:define-route sections (:get "/sections") ()
+(ctelemetry/web:define-route sections (:get "^/sections") ()
   (st-json:jso "sections" ctelemetry/event:*sections*))
 
-(ctelemetry/web:define-route latest (:get "/latest(/.*)?") (args)
+(ctelemetry/web:define-route latest (:get "^/latest(/.*)?") (args)
   (st-json:jso
    "cells"
    (iter (for (topic topic-display-name cell-name cell-display-name count ts value)
@@ -30,14 +30,14 @@
                                           (read-from-string value))))
                        value))))))
 
-(ctelemetry/web:define-route log (:get "/log(?:/(.*))?") (args)
+(ctelemetry/web:define-route log (:get "^/log(?:/(.*))?") (args)
   (st-json:jso
    "topics"
    (ctelemetry/db-commands:get-topics)
    "events"
    (ctelemetry/db-commands:get-events
     :count *default-log-count*
-    :topic-ids (when args
+    :topic-ids (when (first args)
                  (iter (for id in (split-sequence:split-sequence #\+ (first args)))
                        (:printv id)
                        (handler-case

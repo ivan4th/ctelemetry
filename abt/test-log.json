@@ -45,7 +45,7 @@
                           [1, "/more-sensors/voltage", "voltage"]
                         ]
             },
-    "url": "GET /log"
+    "request": "GET /log"
   },
   {
     "body": {
@@ -57,6 +57,6 @@
                           [1, "/more-sensors/voltage", "voltage"]
                         ]
             },
-    "url": "GET /log/3+2"
+    "request": "GET /log/3+2"
   }
 ]

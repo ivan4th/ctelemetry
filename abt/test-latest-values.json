@@ -79,7 +79,7 @@
                          ]
                        ]
             },
-    "url": "GET /latest"
+    "request": "GET /latest"
   },
   {
     "body": {
@@ -104,6 +104,6 @@
                          ]
                        ]
             },
-    "url": "GET /latest/somesensors/"
+    "request": "GET /latest/somesensors/"
   }
 ]

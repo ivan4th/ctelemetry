@@ -6,6 +6,6 @@
                             ["/somesensors/", "Some Sensors"]
                           ]
             },
-    "url": "GET /sections"
+    "request": "GET /sections"
   }
 ]
