@@ -6,7 +6,9 @@
            #:ensure-topic-cell
            #:store-event
            #:store-event-value
-           #:update-cell))
+           #:update-cell
+           #:get-events
+           #:get-topics))
 
 (in-package :ctelemetry/db-commands)
 
@@ -70,14 +72,28 @@
   "update topic_cells set timestamp = :timestamp, count = count + 1, value = :value
    where topic_id = :topic_id and id = :cell_id")
 
+(defsql get-events/no-filter :list
+  "select id, timestamp, topic_id from events order by id desc limit :count")
+
+(defsql get-topics :list
+  "select id, topic, display_name from topics order by display_name")
+
+(defun get-events (&key count topic-ids)
+  (assert (every #'integerp topic-ids))
+  (if (null topic-ids)
+      (get-events/no-filter :count count)
+      (ctelemetry/db:execute-to-list
+       (with-standard-io-syntax
+         (format nil "select id, timestamp, topic_id ~
+                      from events where topic_id in (~{~d~^,~}) ~
+                      order by id desc limit :count"
+                 topic-ids))
+       :count count)))
+
 ;; "2015-01-30 10:05:48"
 #++
 (defparameter *sql-commands*
-  '((:get-events
-     "select t.topic, t.display_name, e.id, e.timestamp, e.topic_id
-      from events e join topics t on e.topic_id = t.id
-      order by e.id desc limit 100")
-    (:get-avg
+  '((:get-avg
      "select
           substr(datetime(e.timestamp, 'unixepoch', 'localtime'), 1, :ofs) ||
             substr('2015-01-01 00:00:00', :ofs + 1) ts,

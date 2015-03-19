@@ -82,6 +82,16 @@
   (<< (st-json:jso "url" "GET /latest/somesensors/"
                    "body" (ctelemetry/routes::web-route-latest '("/somesensors")))))
 
+(deftest test-log () (ctelemetry-fixture)
+  (receive-some-values)
+  (<< (st-json:jso "url" "GET /log"
+                   "body" (ctelemetry/routes::web-route-log '())))
+  (<< (st-json:jso "url" "GET /log/3+2"
+                   "body" (ctelemetry/routes::web-route-log '("3+2"))))
+  ;; TBD: topic name filter
+  ;; TBD: start date
+  )
+
 ;; TBD: specify overrides for plain values
 ;; TBD: test multi-value events
 

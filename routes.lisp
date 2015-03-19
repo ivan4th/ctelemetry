@@ -6,6 +6,8 @@
 
 (in-package :ctelemetry/routes)
 
+(defparameter *default-log-count* 1000)
+
 (ctelemetry/web:define-route sections (:get "/sections") ()
   (st-json:jso "sections" ctelemetry/event:*sections*))
 
@@ -27,3 +29,17 @@
                                         (let ((*read-eval* nil))
                                           (read-from-string value))))
                        value))))))
+
+(ctelemetry/web:define-route log (:get "/log(?:/(.*))?") (args)
+  (st-json:jso
+   "topics"
+   (ctelemetry/db-commands:get-topics)
+   "events"
+   (ctelemetry/db-commands:get-events
+    :count *default-log-count*
+    :topic-ids (when args
+                 (iter (for id in (split-sequence:split-sequence #\+ (first args)))
+                       (:printv id)
+                       (handler-case
+                           (collect (:printv (parse-integer id)))
+                         (parse-error ())))))))
