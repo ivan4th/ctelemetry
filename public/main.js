@@ -62,7 +62,7 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
     }).success(function (result) {
       $scope.loaded = true;
       var valueMap = {};
-      $scope.data = result.map(function (item) {
+      $scope.data = result.cells.map(function (item) {
         var r = {
           topic: item[0],
           topicDisplayName: item[1],
@@ -89,6 +89,7 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
           if (valueMap.hasOwnProperty(key)) {
             // console.log("key found: " + key + "; val=" + value);
             var r = valueMap[key];
+            r.count++; // FIXME: that's not quite correct either
             r.value = value;
             r.timestamp = getDate(d.ts);
           }
