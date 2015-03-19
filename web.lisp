@@ -64,7 +64,8 @@
 (defun setup-public ()
   ;; FIXME: shouldn't require NAMESTRING
   (wookie-plugin-export:def-directory-route
-      "/" (namestring *public-dir*)))
+      "/" (namestring *public-dir*)
+    :disable-directory-listing t))
 
 (setup-public)
 
