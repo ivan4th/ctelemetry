@@ -64,7 +64,6 @@ gulp.task("less", function() {
 
 gulp.task("html", function() {
     return gulp.src(htmlGlobs)
-        .pipe(gulp.dest(''))
         .pipe(livereload());
 });
 
