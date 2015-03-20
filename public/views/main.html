@@ -10,7 +10,11 @@
       </tr>
       <tr ng-repeat="item in data">
         <td class="cell-topic-title" title="{{item.topic}}">{{ item.topicDisplayName }}</td>
-        <td class="cell-title" title="{{item.cell}}">{{ item.cellDisplayName }}</td>
+        <td class="cell-title" title="{{item.cell}}">
+          <a href="" ng-click="item.showDetails()">
+            {{ item.cellDisplayName }}
+          </a>
+        </td>
         <td class="cell-count">{{ item.count }}</td>
         <td class="cell-value">{{ item.value | ctfloat }}</td>
         <td class="cell-timestamp">{{ item.timestamp | date:'yyyy-MM-dd HH:mm:ss'}}</td>

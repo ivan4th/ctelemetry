@@ -41,6 +41,7 @@
                          [
                            "/more-sensors/events/whatever",
                            "Whatever",
+                           4,
                            "cell1",
                            "Cell One",
                            1,
@@ -50,6 +51,7 @@
                          [
                            "/more-sensors/events/whatever",
                            "Whatever",
+                           5,
                            "cell2",
                            "Cell Two",
                            1,
@@ -59,6 +61,7 @@
                          [
                            "/somesensors/temp1",
                            "Temp One",
+                           2,
                            "temp1",
                            "Temp",
                            2,
@@ -68,6 +71,7 @@
                          [
                            "/somesensors/temp2",
                            "Temp Two",
+                           3,
                            "temp2",
                            "Temp",
                            1,
@@ -77,6 +81,7 @@
                          [
                            "/more-sensors/voltage",
                            "voltage",
+                           1,
                            "voltage",
                            "voltage",
                            1,
@@ -93,6 +98,7 @@
                          [
                            "/somesensors/temp1",
                            "Temp One",
+                           2,
                            "temp1",
                            "Temp",
                            2,
@@ -102,6 +108,7 @@
                          [
                            "/somesensors/temp2",
                            "Temp Two",
+                           3,
                            "temp2",
                            "Temp",
                            1,

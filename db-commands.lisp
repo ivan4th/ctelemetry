@@ -8,6 +8,7 @@
            #:store-event
            #:store-event-value
            #:update-cell
+           #:cell-history
            #:get-events
            #:get-topics))
 
@@ -43,7 +44,8 @@
 
 (defsql get-latest :list
   "select t.topic, t.display_name as topic_display_name,
-     tc.name as cell_name, tc.display_name as cell_display_name,
+     tc.id as cell_id, tc.name as cell_name,
+     tc.display_name as cell_display_name,
      tc.count, tc.timestamp as ts, tc.value
    from topics t
      join topic_cells tc on tc.topic_id = t.id
@@ -87,7 +89,7 @@
 (defsql get-events/no-filter :list
   "select e.id, e.timestamp, e.topic_id
    from events e
-   join topics t on e.topic_id = t.id
+     join topics t on e.topic_id = t.id
    where t.topic like :topic_pattern and e.timestamp >= :start
    order by e.id desc limit :count")
 
@@ -98,6 +100,14 @@
 
 (defsql topic-list :list
   "select id from topics where topic like :topic_pattern")
+
+(defsql cell-history :list
+  "select e.id, e.timestamp, ev.value
+   from events e
+     join event_values ev on e.id = ev.event_id
+   where ev.cell_id = :id
+   order by e.id desc
+   limit 10000")
 
 (defun get-events (&key count topic-ids topic-pattern start)
   (assert (every #'integerp topic-ids))

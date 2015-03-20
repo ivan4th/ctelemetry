@@ -1,0 +1,20 @@
+<div class="modal-header history-modal">
+  <h3 class="modal-title" title="{{history.title}}">{{title}}</h3>
+</div>
+<div class="modal-body history-modal">
+  <div class="alert alert-info" role="alert" ng-hide="history.length">
+    No items to display.
+  </div>
+  <table class="table table-striped" ng-show="history.length">
+    <tbody>
+      <tr>
+        <th class="cell-timestamp">Timestamp</th>
+        <th class="cell-value">Value</th>
+      </tr>
+      <tr ng-repeat="item in history">
+        <td class="cell-timestamp">{{ item.timestamp | date:'yyyy-MM-dd HH:mm:ss'}}</td>
+        <td class="cell-value">{{ item.value | ctfloat : 4 }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>

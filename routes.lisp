@@ -34,12 +34,13 @@
 (ctelemetry/web:define-route latest (:get "^/latest(/.*)?") (args)
   (st-json:jso
    "cells"
-   (iter (for (topic topic-display-name cell-name cell-display-name count ts value)
+   (iter (for (topic topic-display-name cell-id cell-name cell-display-name count ts value)
           in (ctelemetry/db-commands:get-latest
               :topic-pattern (topic-pattern (first args))))
          (collect
              (list topic
                    (ctelemetry/event:topic-display-name topic topic-display-name)
+                   cell-id
                    cell-name
                    (ctelemetry/event:cell-display-name topic cell-name cell-display-name)
                    count ts
@@ -90,3 +91,10 @@
        "topic" topic
        "topicDisplayName" topic-display-name
        "timestamp" timestamp))))
+
+(ctelemetry/web:define-route history (:get "^/history/(\\d{1,20})") (args)
+  (when-let ((id (parse-id (first args))))
+    (st-json:jso
+     "history"
+     (iter (for (event-id timestamp value) in (ctelemetry/db-commands:cell-history :id id))
+           (collect (list event-id timestamp (parse-event-value value)))))))

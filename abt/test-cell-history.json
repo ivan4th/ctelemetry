@@ -1,0 +1,46 @@
+[
+  {
+    "cells": [["voltage", 4.5e0]],
+    "displayName": "voltage",
+    "topic": "/more-sensors/voltage",
+    "ts": 1420000000
+  },
+  {
+    "cells": [["temp1", 12]],
+    "displayName": "temp1",
+    "topic": "/somesensors/temp1",
+    "ts": 1420000010
+  },
+  {
+    "cells": [["temp1", 15]],
+    "displayName": "temp1",
+    "topic": "/somesensors/temp1",
+    "ts": 1420000020
+  },
+  {
+    "cells": [["temp2", 42]],
+    "displayName": "temp2",
+    "topic": "/somesensors/temp2",
+    "ts": 1420000030
+  },
+  {
+    "cells": [["cell1", 42.0e0], ["cell2", 42.42e0]],
+    "displayName": "Whatever",
+    "topic": "/more-sensors/events/whatever",
+    "ts": 1420000040
+  },
+  {
+    "cells": [],
+    "displayName": "No Cells",
+    "topic": "/more/no-cells",
+    "ts": 1420000050
+  },
+  {
+    "body": {"history": [[3, 1.42000002e9, 15], [2, 1.42000001e9, 12]]},
+    "request": "GET /history/2"
+  },
+  {
+    "body": {"history": [[5, 1.42000004e9, 42.0e0]]},
+    "request": "GET /history/4"
+  }
+]

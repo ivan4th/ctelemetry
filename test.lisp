@@ -108,6 +108,13 @@
   (iter (for n from 1 to (length *sample-messages*))
         (invoke-request :get (format nil "/event/~d" n))))
 
+(deftest test-cell-history () (ctelemetry-fixture)
+  (receive-some-values)
+  ;; temp1
+  (invoke-request :get "/history/2")
+  ;; Cell One
+  (invoke-request :get "/history/4"))
+
 ;; TBD: reverse log window order
 ;; TBD: (js) display new events & scroll down
 ;; TBD: display cells

@@ -123,7 +123,7 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
     });
   })
 
-  .controller("MainCtrl", function ($scope, $http, $routeParams, getDate, ValueUpdater) {
+  .controller("MainCtrl", function ($scope, $http, $routeParams, $modal, getDate, ValueUpdater) {
     var subtopic = $routeParams.rest ? "/" + $routeParams.rest : "";
     // $scope.loaded = false;
     $scope.data = [];
@@ -137,11 +137,29 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
         var r = {
           topic: item[0],
           topicDisplayName: item[1],
-          cell: item[2],
-          cellDisplayName: item[3],
-          count: item[4],
-          timestamp: getDate(item[5]),
-          value: item[6]
+          cellId: item[2],
+          cell: item[3],
+          cellDisplayName: item[4],
+          count: item[5],
+          timestamp: getDate(item[6]),
+          value: item[7],
+          showDetails: function () {
+            var self = this;
+            console.log("cell details! " + self.cellId);
+            $modal.open({
+              templateUrl: "views/history.html",
+              controller: "HistoryWindowCtrl",
+              size: "lg",
+              resolve: {
+                cellId: function () {
+                  return self.cellId;
+                },
+                cellDisplayName: function () {
+                  return self.cellDisplayName;
+                }
+              }
+            });
+          }
         };
         valueMap[r.topic + "|||" + r.cell] = r;
         return r;
@@ -190,7 +208,7 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
             id: item[0],
             timestamp: getDate(item[1]),
             topic: $scope.topicMap[item[2]],
-            showDetails: function (e) {
+            showDetails: function () {
               var id = this.id;
               console.log("details! " + id);
               $modal.open({
@@ -226,6 +244,23 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
       console.log("event: %o", result);
       $scope.event = result;
       $scope.event.timestamp = getDate($scope.event.timestamp);
+    });
+  })
+
+  .controller("HistoryWindowCtrl", function ($scope, $http, cellId, cellDisplayName, getDate) {
+    $scope.title = cellDisplayName;
+    $http({
+      url: "/history/" + cellId,
+      method: "GET"
+    }).success(function (result) {
+      console.log("history: %o", result);
+      $scope.history = result.history.map(function (historyItem) {
+        return {
+          eventId: historyItem[0],
+          timestamp: getDate(historyItem[1]),
+          value: historyItem[2]
+        };
+      });
     });
   });
 
