@@ -107,7 +107,7 @@
      join event_values ev on e.id = ev.event_id
    where ev.cell_id = :id
    order by e.id desc
-   limit 10000")
+   limit 3000")
 
 (defun get-events (&key count topic-ids topic-pattern start)
   (assert (every #'integerp topic-ids))

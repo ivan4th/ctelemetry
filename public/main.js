@@ -1,11 +1,9 @@
 var angularJS = require("angular"),
     angularBootstrap = require("angular-bootstrap"),
     angularRoute = require("angular-route"),
-    angularSanitize = require("angular-sanitize");
+    angularSanitize = require("angular-sanitize"),
+    c3 = require("c3");
 
-// c3 = require("c3")
-
-console.log("ctelemetry");
 angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
   .config(function ($locationProvider, $routeProvider) {
     $locationProvider.html5Mode(true);
@@ -43,6 +41,53 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
     return function (v, fractionSize) {
       return typeof v == "number" ?
         $filter("number")(v, fractionSize == null ? 4 : fractionSize).replace(",", "") : v;
+    };
+  })
+
+  .directive("timeSeriesChart", function () {
+    return {
+      restrict: "EA",
+      template: "<div></div>",
+      replace: true,
+      scope: {
+        series: "&series"
+      },
+      link: function (scope, element, attrs) {
+        element.addClass("time-series-chart");
+        scope.$watch("series()", function (newValue) {
+          if (!newValue || !newValue.length)
+            return;
+          newValue = newValue.concat([]).reverse();
+          setTimeout(function () {
+            element.html("<div></div>");
+            var chart = c3.generate({
+              bindto: element.find("div")[0],
+              data: {
+                x: "x",
+                columns: [
+                  ["x"].concat(newValue.map(function (item) { return item.timestamp; })),
+                  ["y"].concat(newValue.map(function (item) { return item.value; }))
+                ]
+              },
+              axis: {
+                x: {
+                  type: "timeseries",
+                  tick: {
+                    format: "%Y-%m-%d"
+                  }
+                }
+              },
+              point: {
+                show: false
+              },
+              size: {
+                width: Math.max(element[0].offsetWidth - 10 || 0, 900),
+                height: 500
+              }
+            });
+          }, 0);
+        });
+      }
     };
   })
 
@@ -248,6 +293,7 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
   })
 
   .controller("HistoryWindowCtrl", function ($scope, $http, cellId, cellDisplayName, getDate) {
+    $scope.mode = "chart";
     $scope.title = cellDisplayName;
     $http({
       url: "/history/" + cellId,

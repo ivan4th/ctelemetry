@@ -30,6 +30,7 @@ function browserifyShare(){
     packageCache: {},
     fullPaths: true
   });
+  //b.transform("debowerify");
   b.transform("deamdify");
 
   if(watch) {
@@ -55,7 +56,11 @@ gulp.task("less", function() {
     return gulp.src("./public/style.less")  // only compile the entry file
         .pipe(plumber())
         .pipe(less({
-          paths: ["./public/less", "./node_modules/bootstrap/less"]
+          paths: [
+            "./public/less",
+            "./node_modules/bootstrap/less",
+            "./node_modules/c3"
+          ]
         }))
         .pipe(prefix("last 2 versions"), {cascade:true})
         .pipe(gulp.dest("./public/dist"))

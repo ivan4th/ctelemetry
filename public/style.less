@@ -1,3 +1,4 @@
+@import (inline) "c3.css";
 @import "bootstrap.less";
 
 body {
@@ -56,6 +57,7 @@ table.log {
     margin-bottom: 10px;
   }
 }
+
 .modal-backdrop {
   // FIXME: angular-bootstrap incompatibility with newer bootstrap?
   bottom: 0;
@@ -63,4 +65,15 @@ table.log {
 
 th.cell-value, td.cell-value, th.cell-count, td.cell-count {
   text-align: right;
+}
+
+.history-modal .btn-group {
+  float: right;
+}
+
+@media (min-width: 1020px) {
+  .modal-lg {
+    width: 1000px;
+    // height: 1000px;
+  }
 }

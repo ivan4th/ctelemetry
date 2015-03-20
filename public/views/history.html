@@ -1,11 +1,17 @@
 <div class="modal-header history-modal">
+  <div class="btn-group">
+    <label class="btn btn-primary" ng-model="mode" btn-radio="'chart'">Chart</label>
+    <label class="btn btn-primary" ng-model="mode" btn-radio="'table'">Table</label>
+  </div>
   <h3 class="modal-title" title="{{history.title}}">{{title}}</h3>
 </div>
 <div class="modal-body history-modal">
   <div class="alert alert-info" role="alert" ng-hide="history.length">
     No items to display.
   </div>
-  <table class="table table-striped" ng-show="history.length">
+  <time-series-chart series="history" ng-show="history.length && mode == 'chart'">
+  </time-series-chart>
+  <table class="table table-striped" ng-show="history.length && mode == 'table'">
     <tbody>
       <tr>
         <th class="cell-timestamp">Timestamp</th>
