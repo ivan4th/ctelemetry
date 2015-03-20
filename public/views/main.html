@@ -1,50 +1,20 @@
 <div>
-  <div class="topic-filter">
-    <div class="btn-toolbar">
-      <button ng-repeat="topic in topics" type="button" class="btn btn-default" ng-model="topic.enabled" btn-checkbox>
-        {{topic.displayName}}
-      </button>
-    </div>
-  </div>
-  <div class="alert alert-info" role="alert" ng-hide="events.length">
-    No events to display.
-  </div>
-  <table class="table table-striped log" ng-show="events.length">
-    <thead>
-      <tr>
-        <th class="cell-timestamp">Timestamp</th>
-        <th class="cell-event">Event</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr ng-repeat="event in events">
-        <td class="cell-timestamp">{{event.timestamp | date:'yyyy-MM-dd HH:mm:ss'}}</td>
-        <td class="cell-event">
-          <a href="" ng-click="event.showDetails()">
-            {{event.topic.displayName}}
-          </a>
-        </td>
-      </tr>
-    </tbody>
-  </table>
-  <!--
   <table class="table table-striped">
     <tbody>
       <tr>
-        <th>Event</th>
-        <th>Cell</th>
-        <th>Count</th>
-        <th>Value</th>
-        <th>Timestamp</th>
+        <th class="cell-topic-title">Event</th>
+        <th class="cell-title">Cell</th>
+        <th class="cell-count">Count</th>
+        <th class="cell-value">Value</th>
+        <th class="cell-timestamp">Timestamp</th>
       </tr>
       <tr ng-repeat="item in data">
-        <td title="{{item.topic}}">{{ item.topicDisplayName }}</td>
-        <td title="{{item.cell}}">{{ item.cellDisplayName }}</td>
-        <td>{{ item.count }}</td>
-        <td>{{ item.value }}</td>
-        <td>{{ item.timestamp | date:'yyyy-MM-dd HH:mm:ss'}}</td>
+        <td class="cell-topic-title" title="{{item.topic}}">{{ item.topicDisplayName }}</td>
+        <td class="cell-title" title="{{item.cell}}">{{ item.cellDisplayName }}</td>
+        <td class="cell-count">{{ item.count }}</td>
+        <td class="cell-value">{{ item.value | ctfloat }}</td>
+        <td class="cell-timestamp">{{ item.timestamp | date:'yyyy-MM-dd HH:mm:ss'}}</td>
       </tr>
     </tbody>
   </table>
-  -->
 </div>

@@ -8,13 +8,13 @@
         <span class="icon-bar"></span>
       </button>
       -->
-      <a class="navbar-brand" href="#">Common Telemetry</a>
+      <a class="navbar-brand" href="/ct/main/">Common Telemetry</a>
     </div>
     <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav">
         <li ng-repeat="section in sections"
             ng-class="{ active: active(section) }">
-          <a href="/ct{{section.topicPrefix}}">{{ section.displayName }}</a>
+          <a href="/ct/main{{section.topicPrefix}}">{{ section.displayName }}</a>
         </li>
         <!--
         <li ng-class="{ active: isActive('/dashboard') }"><a href="#/dashboard">Dashboard</a></li>
@@ -27,6 +27,14 @@
         <li><a href="#/charts">Charts</a></li>
         <li><a href="#/logs">Logs</a></li>
         -->
+      </ul>
+      <ul class="nav navbar-nav navbar-right" ng-show="current()">
+        <li ng-class="{ active: !showingLog() }">
+          <a href="/ct/main{{current().topicPrefix}}">Summary</a>
+        </li>
+        <li ng-class="{ active: showingLog() }">
+          <a href="/ct/log{{current().topicPrefix}}">Log</a>
+        </li>
       </ul>
     </div>
   </div>
