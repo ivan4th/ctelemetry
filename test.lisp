@@ -92,7 +92,11 @@
   ;; non-realistic query (topic 2 is not under /more-sensors)
   (invoke-request :get "/log/more-sensors/?filter=2,4")
   (invoke-request :get "/log?filter=2,3&start=1420000020")
-  (invoke-request :get "/log?start=1420000020"))
+  (invoke-request :get "/log?start=1420000020")
+  ;; empty filter means 'nothing', but only when 'filter' query
+  ;; parameter is actually present!
+  (invoke-request :get "/log?filter=")
+  (invoke-request :get "/log/more-sensors/?filter="))
 
 ;; TBD: specify overrides for plain values
 ;; TBD: test multi-value events

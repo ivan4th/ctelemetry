@@ -41,15 +41,17 @@
            (collect (list id topic
                           (ctelemetry/event:topic-display-name topic display-name))))
      "events"
-     (let ((events (ctelemetry/db-commands:get-events
-                    :count *default-log-count*
-                    :topic-pattern topic-pattern
-                    :topic-ids (when-let ((filter (ctelemetry/web:get-var "filter")))
-                                 (iter (for id in (split-sequence:split-sequence #\, filter))
-                                       (handler-case
-                                           (collect (parse-integer id))
-                                         (parse-error ()))))
-                    :start (or (when-let ((start (ctelemetry/web:get-var "start")))
-                                 (parse-integer start :junk-allowed t))
-                               0))))
-       events))))
+     (let ((filter (ctelemetry/web:get-var "filter")))
+       ;; empty string as a filter means 'nothing'
+       (when (or (null filter) (not (string= "" filter)))
+         (ctelemetry/db-commands:get-events
+          :count *default-log-count*
+          :topic-pattern topic-pattern
+          :topic-ids (when filter
+                       (iter (for id in (split-sequence:split-sequence #\, filter))
+                             (handler-case
+                                 (collect (parse-integer id))
+                               (parse-error ()))))
+          :start (or (when-let ((start (ctelemetry/web:get-var "start")))
+                       (parse-integer start :junk-allowed t))
+                     0)))))))

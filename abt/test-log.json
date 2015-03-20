@@ -120,5 +120,27 @@
                         ]
             },
     "request": "GET /log?start=1420000020"
+  },
+  {
+    "body": {
+              "events": [],
+              "topics": [
+                          [4, "/more-sensors/events/whatever", "Whatever"],
+                          [2, "/somesensors/temp1", "Temp One"],
+                          [3, "/somesensors/temp2", "Temp Two"],
+                          [1, "/more-sensors/voltage", "voltage"]
+                        ]
+            },
+    "request": "GET /log?filter="
+  },
+  {
+    "body": {
+              "events": [],
+              "topics": [
+                          [4, "/more-sensors/events/whatever", "Whatever"],
+                          [1, "/more-sensors/voltage", "voltage"]
+                        ]
+            },
+    "request": "GET /log/more-sensors/?filter="
   }
 ]
