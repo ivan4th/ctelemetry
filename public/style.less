@@ -38,4 +38,23 @@ table.log {
   .cell-timestamp {
     width: 160px;
   }
+
+  a:focus {
+    color: @link-color;
+    text-decoration: none;
+  }
+}
+
+.modal-body.event-modal {
+  .event-timestamp {
+    margin-bottom: 10px;
+  }
+}
+.modal-backdrop {
+  // FIXME: angular-bootstrap incompatibility with newer bootstrap?
+  bottom: 0;
+}
+
+th.cell-value, td.cell-value {
+  text-align: right;
 }

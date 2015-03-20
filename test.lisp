@@ -23,7 +23,12 @@
                    (list "Whatever"
                          (fake-time fixture)
                          '(:cell1 42d0 "Cell One")
-                         '(:cell2 42.42d0 "Cell Two")))))))
+                         '(:cell2 42.42d0 "Cell Two")))))
+        (list "/more/no-cells"
+              #'(lambda (fixture)
+                  (prin1-to-string
+                   (list "No Cells"
+                         (fake-time fixture)))))))
 
 
 (defmethod invoke-test-case-outer ((fixture ctelemetry-fixture) test-case teardown-p)
@@ -97,6 +102,16 @@
   ;; parameter is actually present!
   (invoke-request :get "/log?filter=")
   (invoke-request :get "/log/more-sensors/?filter="))
+
+(deftest test-load-event () (ctelemetry-fixture)
+  (receive-some-values)
+  (iter (for n from 1 to (length *sample-messages*))
+        (invoke-request :get (format nil "/event/~d" n))))
+
+;; TBD: reverse log window order
+;; TBD: (js) display new events & scroll down
+;; TBD: display cells
+;; TBD: use angular-websocket for autoreconnection
 
 ;; TBD: specify overrides for plain values
 ;; TBD: test multi-value events

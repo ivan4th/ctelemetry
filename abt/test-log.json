@@ -30,8 +30,15 @@
     "ts": 1420000040
   },
   {
+    "cells": [],
+    "displayName": "No Cells",
+    "topic": "/more/no-cells",
+    "ts": 1420000050
+  },
+  {
     "body": {
               "events": [
+                          [6, 1.42000005e9, 5],
                           [5, 1.42000004e9, 4],
                           [4, 1.42000003e9, 3],
                           [3, 1.42000002e9, 2],
@@ -39,6 +46,7 @@
                           [1, 1.42e9, 1]
                         ],
               "topics": [
+                          [5, "/more/no-cells", "No Cells"],
                           [4, "/more-sensors/events/whatever", "Whatever"],
                           [2, "/somesensors/temp1", "Temp One"],
                           [3, "/somesensors/temp2", "Temp Two"],
@@ -55,6 +63,7 @@
                           [2, 1.42000001e9, 2]
                         ],
               "topics": [
+                          [5, "/more/no-cells", "No Cells"],
                           [4, "/more-sensors/events/whatever", "Whatever"],
                           [2, "/somesensors/temp1", "Temp One"],
                           [3, "/somesensors/temp2", "Temp Two"],
@@ -97,6 +106,7 @@
     "body": {
               "events": [[4, 1.42000003e9, 3], [3, 1.42000002e9, 2]],
               "topics": [
+                          [5, "/more/no-cells", "No Cells"],
                           [4, "/more-sensors/events/whatever", "Whatever"],
                           [2, "/somesensors/temp1", "Temp One"],
                           [3, "/somesensors/temp2", "Temp Two"],
@@ -108,11 +118,13 @@
   {
     "body": {
               "events": [
+                          [6, 1.42000005e9, 5],
                           [5, 1.42000004e9, 4],
                           [4, 1.42000003e9, 3],
                           [3, 1.42000002e9, 2]
                         ],
               "topics": [
+                          [5, "/more/no-cells", "No Cells"],
                           [4, "/more-sensors/events/whatever", "Whatever"],
                           [2, "/somesensors/temp1", "Temp One"],
                           [3, "/somesensors/temp2", "Temp Two"],
@@ -125,6 +137,7 @@
     "body": {
               "events": [],
               "topics": [
+                          [5, "/more/no-cells", "No Cells"],
                           [4, "/more-sensors/events/whatever", "Whatever"],
                           [2, "/somesensors/temp1", "Temp One"],
                           [3, "/somesensors/temp2", "Temp Two"],

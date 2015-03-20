@@ -2,6 +2,7 @@
   (:import-from :ctelemetry/db :defddl :defsql)
   (:use :cl :alexandria :iterate)
   (:export #:get-latest
+           #:load-event
            #:ensure-topic
            #:ensure-topic-cell
            #:store-event
@@ -42,12 +43,23 @@
 
 (defsql get-latest :list
   "select t.topic, t.display_name as topic_display_name,
-             tc.name as cell_name, tc.display_name as cell_display_name,
-             tc.count, tc.timestamp as ts, tc.value
+     tc.name as cell_name, tc.display_name as cell_display_name,
+     tc.count, tc.timestamp as ts, tc.value
    from topics t
      join topic_cells tc on tc.topic_id = t.id
    where t.topic like :topic_pattern
    order by topic_display_name, cell_name")
+
+(defsql load-event :list
+  "select t.topic, t.display_name as topic_display_name,
+     tc.name as cell_name, tc.display_name as cell_display_name,
+     e.timestamp as ts, ev.value
+   from events e
+     join topics t on e.topic_id = t.id
+     left join event_values ev on e.id = ev.event_id
+     left join topic_cells tc on ev.cell_id = tc.id
+   where e.id = :id
+   order by cell_name")
 
 (defsql ensure-topic :non-query-rowid
   "insert or replace into topics (id, topic, display_name)

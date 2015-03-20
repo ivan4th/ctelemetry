@@ -25,6 +25,19 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
   .run(function () {//(ControlClient) {
     // ControlClient.startup();
   })
+  .factory("getDate", function () {
+    return function getDate (ts) {
+      var d = new Date();
+      d.setTime(ts * 1000);
+      return d;
+    };
+  })
+  .filter("ctfloat", function ($filter) {
+    return function (v, fractionSize) {
+      return typeof v == "number" ?
+        $filter("number")(v, fractionSize == null ? 4 : fractionSize).replace(",", "") : v;
+    };
+  })
   .controller("NavBarCtrl", function ($scope, $http, $routeParams) {
     $http({
       url: "/sections",
@@ -42,13 +55,8 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
       console.log("sections: %o", $scope.sections);
     });
   })
-  .controller("MainCtrl", function ($scope, $http, $routeParams) {
+  .controller("MainCtrl", function ($scope, $http, $routeParams, $modal, getDate) {
     var subtopic = $routeParams.rest ? "/" + $routeParams.rest : "";
-    function getDate (ts) {
-      var d = new Date();
-      d.setTime(ts * 1000);
-      return d;
-    }
     // $scope.loaded = false;
     $scope.data = [];
     $scope.topicMap = {};
@@ -89,7 +97,21 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
           return {
             id: item[0],
             timestamp: getDate(item[1]),
-            topic: $scope.topicMap[item[2]]
+            topic: $scope.topicMap[item[2]],
+            showDetails: function (e) {
+              var id = this.id;
+              console.log("details! " + id);
+              $modal.open({
+                templateUrl: "views/event.html",
+                controller: "EventWindowCtrl",
+                size: "lg",
+                resolve: {
+                  eventId: function () {
+                    return id;
+                  }
+                }
+              });
+            }
           };
         });
       });
@@ -150,6 +172,16 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
       // ws.onMessage(function (message) {
       //   console.log("ws: %o", message);
       // });
+    });
+  })
+  .controller("EventWindowCtrl", function ($scope, $http, eventId, getDate) {
+    $http({
+      url: "/event/" + eventId,
+      method: "GET"
+    }).success(function (result) {
+      console.log("event: %o", result);
+      $scope.event = result;
+      $scope.event.timestamp = getDate($scope.event.timestamp);
     });
   });
 

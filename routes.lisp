@@ -7,6 +7,7 @@
 (in-package :ctelemetry/routes)
 
 (defparameter *default-log-count* 1000)
+(define-constant +max-id+ (1- (expt 2 63)))
 
 (ctelemetry/web:define-route sections (:get "^/sections") ()
   (st-json:jso "sections" ctelemetry/event:*sections*))
@@ -14,6 +15,21 @@
 (defun topic-pattern (arg)
    ;; this handles NIL case, too
   (concatenate 'string arg "%"))
+
+(defun parse-id (id-str)
+  (if (> (length id-str) 20)
+      nil
+      (handler-case
+          (let ((n (parse-integer id-str)))
+            (when (< 0 n +max-id+) n))
+        (parse-error ()))))
+
+;; FIXME
+(defun parse-event-value (value)
+  (or (ignore-errors (with-standard-io-syntax
+                       (let ((*read-eval* nil))
+                         (read-from-string value))))
+      value))
 
 (ctelemetry/web:define-route latest (:get "^/latest(/.*)?") (args)
   (st-json:jso
@@ -27,10 +43,7 @@
                    cell-name
                    (ctelemetry/event:cell-display-name topic cell-name cell-display-name)
                    count ts
-                   (or (ignore-errors (with-standard-io-syntax
-                                        (let ((*read-eval* nil))
-                                          (read-from-string value))))
-                       value))))))
+                   (parse-event-value value))))))
 
 (ctelemetry/web:define-route log (:get "^/log(/.*)?") (args)
   (let ((topic-pattern (topic-pattern (first args))))
@@ -48,10 +61,32 @@
           :count *default-log-count*
           :topic-pattern topic-pattern
           :topic-ids (when filter
-                       (iter (for id in (split-sequence:split-sequence #\, filter))
-                             (handler-case
-                                 (collect (parse-integer id))
-                               (parse-error ()))))
+                       (remove nil (mapcar #'parse-id
+                                           (split-sequence:split-sequence #\, filter))))
           :start (or (when-let ((start (ctelemetry/web:get-var "start")))
                        (parse-integer start :junk-allowed t))
                      0)))))))
+
+;; \d{1,20} due to 64-bit ids
+(ctelemetry/web:define-route event (:get "^/event/(\\d{1,20})") (args)
+  (when-let ((id (parse-id (first args))))
+    (let (topic topic-display-name timestamp)
+      (st-json:jso
+       "cells"
+       (iter (for (r-topic r-topic-display-name cell-name cell-display-name r-timestamp value)
+              in (ctelemetry/db-commands:load-event :id id))
+             (if-first-time
+              (setf topic r-topic
+                    topic-display-name (ctelemetry/event:topic-display-name
+                                        r-topic r-topic-display-name)
+                    timestamp r-timestamp))
+             (when cell-name
+               (collect
+                   (st-json:jso "cellName"
+                                cell-name
+                                "cellDisplayName"
+                                (ctelemetry/event:cell-display-name topic cell-name cell-display-name)
+                                "value" (parse-event-value value)))))
+       "topic" topic
+       "topicDisplayName" topic-display-name
+       "timestamp" timestamp))))

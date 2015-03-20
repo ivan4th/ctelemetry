@@ -1,0 +1,127 @@
+[
+  {
+    "cells": [["voltage", 4.5e0]],
+    "displayName": "voltage",
+    "topic": "/more-sensors/voltage",
+    "ts": 1420000000
+  },
+  {
+    "cells": [["temp1", 12]],
+    "displayName": "temp1",
+    "topic": "/somesensors/temp1",
+    "ts": 1420000010
+  },
+  {
+    "cells": [["temp1", 15]],
+    "displayName": "temp1",
+    "topic": "/somesensors/temp1",
+    "ts": 1420000020
+  },
+  {
+    "cells": [["temp2", 42]],
+    "displayName": "temp2",
+    "topic": "/somesensors/temp2",
+    "ts": 1420000030
+  },
+  {
+    "cells": [["cell1", 42.0e0], ["cell2", 42.42e0]],
+    "displayName": "Whatever",
+    "topic": "/more-sensors/events/whatever",
+    "ts": 1420000040
+  },
+  {
+    "cells": [],
+    "displayName": "No Cells",
+    "topic": "/more/no-cells",
+    "ts": 1420000050
+  },
+  {
+    "body": {
+              "cells": [
+                         {
+                           "cellDisplayName": "voltage",
+                           "cellName": "voltage",
+                           "value": 4.5e0
+                         }
+                       ],
+              "timestamp": 1.42e9,
+              "topic": "/more-sensors/voltage",
+              "topicDisplayName": "voltage"
+            },
+    "request": "GET /event/1"
+  },
+  {
+    "body": {
+              "cells": [
+                         {
+                           "cellDisplayName": "Temp",
+                           "cellName": "temp1",
+                           "value": 12
+                         }
+                       ],
+              "timestamp": 1.42000001e9,
+              "topic": "/somesensors/temp1",
+              "topicDisplayName": "Temp One"
+            },
+    "request": "GET /event/2"
+  },
+  {
+    "body": {
+              "cells": [
+                         {
+                           "cellDisplayName": "Temp",
+                           "cellName": "temp1",
+                           "value": 15
+                         }
+                       ],
+              "timestamp": 1.42000002e9,
+              "topic": "/somesensors/temp1",
+              "topicDisplayName": "Temp One"
+            },
+    "request": "GET /event/3"
+  },
+  {
+    "body": {
+              "cells": [
+                         {
+                           "cellDisplayName": "Temp",
+                           "cellName": "temp2",
+                           "value": 42
+                         }
+                       ],
+              "timestamp": 1.42000003e9,
+              "topic": "/somesensors/temp2",
+              "topicDisplayName": "Temp Two"
+            },
+    "request": "GET /event/4"
+  },
+  {
+    "body": {
+              "cells": [
+                         {
+                           "cellDisplayName": "Cell One",
+                           "cellName": "cell1",
+                           "value": 42.0e0
+                         },
+                         {
+                           "cellDisplayName": "Cell Two",
+                           "cellName": "cell2",
+                           "value": 42.42e0
+                         }
+                       ],
+              "timestamp": 1.42000004e9,
+              "topic": "/more-sensors/events/whatever",
+              "topicDisplayName": "Whatever"
+            },
+    "request": "GET /event/5"
+  },
+  {
+    "body": {
+              "cells": [],
+              "timestamp": 1.42000005e9,
+              "topic": "/more/no-cells",
+              "topicDisplayName": "No Cells"
+            },
+    "request": "GET /event/6"
+  }
+]
