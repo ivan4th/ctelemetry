@@ -84,21 +84,25 @@
    where topic like :topic_pattern
    order by display_name")
 
+(defsql topic-list :list
+  "select id from topics where topic like :topic_pattern")
+
 (defun get-events (&key count topic-ids topic-pattern start)
   (assert (every #'integerp topic-ids))
   (if (null topic-ids)
       (get-events/no-filter :topic-pattern topic-pattern :count count :start start)
-      (ctelemetry/db:execute-to-list
-       (with-standard-io-syntax
-         (format nil "select e.id, e.timestamp, e.topic_id ~
-                      from events e join topics t on e.topic_id = t.id ~
-                      where t.topic like :topic_pattern and e.topic_id in (~{~d~^,~}) and ~
-                        e.timestamp >= :start
-                      order by e.id desc limit :count"
-                 topic-ids))
-       :topic-pattern topic-pattern
-       :count count
-       :start start)))
+      (let ((actual-topic-ids
+              (intersection (mapcar #'first (topic-list :topic-pattern topic-pattern))
+                            topic-ids)))
+        (ctelemetry/db:execute-to-list
+         (with-standard-io-syntax
+           (format nil "select e.id, e.timestamp, e.topic_id ~
+                        from events e ~
+                        where e.topic_id in (~{~d~^,~}) and e.timestamp >= :start
+                        order by e.id desc limit :count"
+                   actual-topic-ids))
+         :count count
+         :start start))))
 
 ;; "2015-01-30 10:05:48"
 #++
