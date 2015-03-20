@@ -33,17 +33,12 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
       $scope.active = function (section) {
         return section.topicPrefix == ($routeParams.rest || "/");
       };
-      $scope.sections = [
-        {
-          topicPrefix: "/",
-          displayName: "All" // FIXME (utf-8)
-        }
-      ].concat(result.sections.map(function (section) {
+      $scope.sections = result.sections.map(function (section) {
         return {
           topicPrefix: section[0],
           displayName: section[1]
         };
-      }));
+      });
       console.log("sections: %o", $scope.sections);
     });
   })
