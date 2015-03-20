@@ -26,7 +26,12 @@
 
 ;; FIXME
 (eval-when (:compile-toplevel :load-toplevel :execute)
-  (wookie:load-plugins))
+  ;; FIXME: When trying to re-load plugins, most plugins
+  ;; are unloaded. Also, maybe loading them this way
+  ;; isn't correct either.
+  (defvar *plugins-loaded* nil)
+  (unless (shiftf *plugins-loaded* t)
+    (wookie:load-plugins)))
 
 (defun get-var (name)
   (funcall *query-var-func* name))
