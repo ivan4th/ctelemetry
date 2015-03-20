@@ -4,6 +4,38 @@ body {
   padding-top: 70px ;
 }
 
-table.log .cell-timestamp {
-  width: 160px;
+.topic-filter {
+  margin-bottom: 20px;
+
+  button {
+    margin-bottom: 4px;
+  }
+}
+
+table.log {
+  display: table;
+  width: 100%;
+
+  & > thead, & > tbody {
+    float: left;
+    width: 100%;
+  }
+
+  & > tbody {
+    overflow-y: auto;
+    max-height: 400px;
+  }
+
+  th {
+    border-bottom: none;
+  }
+
+  tr {
+    width: 100%;
+    display: table;
+  }
+
+  .cell-timestamp {
+    width: 160px;
+  }
 }
