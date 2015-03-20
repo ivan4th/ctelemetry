@@ -43,19 +43,71 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
     });
   })
   .controller("MainCtrl", function ($scope, $http, $routeParams) {
+    var subtopic = $routeParams.rest ? "/" + $routeParams.rest : "";
     function getDate (ts) {
       var d = new Date();
       d.setTime(ts * 1000);
       return d;
     }
-    $scope.loaded = false;
+    // $scope.loaded = false;
     $scope.data = [];
+    $scope.topicMap = {};
+    $scope.topics = null;
+    $scope.activeTopics = function () {
+      if ($scope.topics === null)
+        return null; // not loaded yet
+      return $scope.topics.filter(function (t) {
+        return t.enabled;
+      }).map(function (t) {
+        return t.id;
+      }).sort().join(",");
+    };
     console.log("main ctrl init");
+    $scope.loadLog = function () {
+      var activeTopics = $scope.activeTopics();
+      var filter = activeTopics === null ? "" : "?filter=" + activeTopics;
+      $http({
+        url: "/log" + subtopic + filter,
+        method: "GET"
+      }).success(function (result) {
+        console.log("log: %o", result);
+        var oldMap = $scope.topicMap || {};
+        $scope.topicMap = {};
+        $scope.topics = result.topics.map(function (item) {
+          var id = item[0];
+          var t = {
+            id: id,
+            topic: item[1],
+            displayName: item[2],
+            enabled: oldMap.hasOwnProperty(id) ? oldMap[id].enabled : true
+          };
+          $scope.topicMap[t.id] = t;
+          return t;
+        });
+
+        $scope.events = result.events.map(function (item) {
+          return {
+            id: item[0],
+            timestamp: getDate(item[1]),
+            topic: $scope.topicMap[item[2]]
+          };
+        });
+      });
+    };
+    $scope.$watch("activeTopics()", function (newValue, oldValue) {
+      // avoid reloading the log after the initial load
+      if (newValue === oldValue || oldValue === null)
+        return;
+      console.log("activeTopics=%s (was %s)", newValue, oldValue);
+      $scope.loadLog();
+    });
+    $scope.loadLog();
+
     $http({
-      url: "/latest" + ($routeParams.rest ? "/" + $routeParams.rest : ""),
+      url: "/latest" + subtopic,
       method: "GET"
     }).success(function (result) {
-      $scope.loaded = true;
+      // $scope.loaded = true;
       var valueMap = {};
       $scope.data = result.cells.map(function (item) {
         var r = {
@@ -100,3 +152,5 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
       // });
     });
   });
+
+// TBD: CSRF (XSRF) protection
