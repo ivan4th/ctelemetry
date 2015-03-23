@@ -3,6 +3,7 @@
   (:import-from :log4cl)
   (:import-from :websocket-driver)
   (:import-from :puri)
+  (:import-from :cl-who)
   (:import-from :blackbird)
   (:use :cl :alexandria :iterate)
   (:export #:define-route
@@ -49,14 +50,28 @@
                 (remhash ws *connected-clients*)))
     (wsd:start-connection ws)))
 
-(wookie:defroute (:get "/ct(/.*)?") (request response)
+(wookie:defroute (:get "^(/|/ct(/.*)?)$" :priority 1) (request response)
   (declare (ignore request))
   (wookie:send-response
    response
    :headers '(:content-type "text/html; charset=utf-8")
-   :body (alexandria:read-file-into-string
-          (merge-pathnames #p"index.html" *public-dir*)
-          :external-format :utf-8)))
+   :body (concatenate
+          'string
+          "<!doctype html>"
+          (cl-who:with-html-output-to-string (out nil :indent t)
+            (:html
+             (:head
+              (:meta :http-equiv "Content-Type" :content "text/html; charset=utf-8")
+              (:base :href "/")
+              (:title "Common Telemetry")
+              (:link :rel "stylesheet" :href "dist/style.css")
+              (:script :src "http://localhost:35729/livereload.js")
+              (:script :src "dist/share.js"))
+             (:body
+              :ng-app "ctelemetryApp"
+              (:div :ng-include (cl-who:escape-string "'views/navbar.html'"))
+              (:div :class "container primary-content" :ng-view "")
+              (:div :ng-include (cl-who:escape-string "'views/common.html''"))))))))
 
 (wookie:defroute (:get "/ws-data") (req res)
   (declare (ignore res))
