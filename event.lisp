@@ -2,6 +2,7 @@
   (:import-from :i4-diet-utils) ;; FIXME
   (:import-from :ctelemetry/db)
   (:import-from :ctelemetry/db-commands)
+  (:import-from :ctelemetry/util)
   (:import-from :parse-number)
   (:use :cl :alexandria :iterate)
   (:export #:*topic-overrides*
@@ -28,7 +29,9 @@
   #'(lambda (event)
       (declare (ignore event))
       (values)))
-(defvar *current-time-function* 'current-time)
+(defvar *current-time-function*
+  #'(lambda ()
+      (coerce (ctelemetry/util:current-time) 'double-float)))
 
 (define-condition telemetry-error (simple-error) ())
 
@@ -65,13 +68,6 @@
                :value value-str
                :topic-id topic-id
                :cell-id cell-id))))))
-
-(defun current-time ()
-  (coerce (i4-diet-utils:universal-time->unix-timestamp (get-universal-time)) 'double-float)
-  #++
-  (multiple-value-bind (sec usec)
-      (osicat-posix:gettimeofday)
-    (+ sec (/ usec 1d6))))
 
 #++
 (defun sample-telemetry-event (&optional (topic "/some/topic") (display-name "Something Happened"))

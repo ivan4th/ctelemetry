@@ -26,7 +26,8 @@
                 #:add-subscription-topic)
   (:import-from :ctelemetry/web
                 ;; FIXME
-                #:*www-port*)
+                #:*www-port*
+                #:*auth-key*)
   (:import-from :ctelemetry/routes)
   (:use :cl :alexandria :iterate))
 

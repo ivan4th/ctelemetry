@@ -101,7 +101,8 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
       // FIXME: use angular-websocket
       var ws = new window.WebSocket("ws://" + document.location.host + "/ws-data");
       ws.onopen = function () {
-        console.log("ws: open");
+        console.log("ws connected");
+        ws.send(document.body.getAttribute("data-auth"));
       };
       ws.onmessage = function (message) {
         var d = JSON.parse(message.data);
