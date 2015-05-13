@@ -7,6 +7,7 @@
   (:import-from :cl-who)
   (:import-from :blackbird)
   (:import-from :ctelemetry/util)
+  (:import-from :split-sequence)
   (:use :cl :alexandria :iterate)
   (:export #:define-route
            #:ws-broadcast
@@ -15,7 +16,8 @@
            ;; FIXME
            #:setup-public
            #:*public-dir*
-           #:*auth-key*))
+           #:*auth-key*
+           #:*http-auth*))
 
 (in-package :ctelemetry/web)
 
@@ -28,6 +30,8 @@
 (defvar *defined-routes* (make-hash-table))
 (defvar *query-var-func*)
 (defvar *auth-key* nil)
+(defvar *http-auth* nil
+  "NIL for no auth, a list consisting of username and password otherwise")
 
 (defclass ws-client ()
   ((connect-ts :accessor connect-ts :initarg :connect-ts)
@@ -50,6 +54,33 @@
     (when-let ((parsed (ignore-errors (parse-integer time :radix 16))))
       (let ((cur-time (ctelemetry/util:current-time)))
         (<= 0 (- cur-time parsed) *auth-token-validity-duration-sec*)))))
+
+;; Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+(defun parse-http-auth-value (authorization)
+  ;; see: http://stackoverflow.com/questions/475074/regex-to-parse-or-validate-base64-data
+  (i4-diet-utils:with-match (b64)
+      ("^Basic\\s+((?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?)$" authorization)
+    (when-let ((s (ignore-errors
+                   (base64:base64-string-to-string b64))))
+      (destructuring-bind (&optional user pw)
+          (cl-ppcre:split ":" s :limit 2)
+        (when (and user pw)
+          (values user pw))))))
+
+(defun verify-http-auth (request)
+  (or (null *http-auth*)
+      (when-let ((auth (wookie:get-header (wookie:request-headers request)
+                                          "authorization")))
+        (multiple-value-bind (user pw) (parse-http-auth-value auth)
+          (and user pw (equal *http-auth* (list user pw)))))))
+
+(defun require-http-auth (response)
+  (wookie:send-response
+   response
+   :status 401
+   :headers '(:content-type "text/html; charset=utf-8"
+              :www-authenticate "Basic realm=\"ctelemetry\"")
+   :body "<!doctype html><html><head><title>401 Unauthorized</title></head><body>401 Unauthorized</body></html>"))
 
 ;; FIXME
 (eval-when (:compile-toplevel :load-toplevel :execute)
@@ -100,28 +131,29 @@
       (wsd:start-connection ws))))
 
 (wookie:defroute (:get "^(/|/ct(/.*)?)$" :priority 1) (request response)
-  (declare (ignore request))
-  (wookie:send-response
-   response
-   :headers '(:content-type "text/html; charset=utf-8")
-   :body (concatenate
-          'string
-          "<!doctype html>"
-          (cl-who:with-html-output-to-string (out nil :indent t)
-            (:html
-             (:head
-              (:meta :http-equiv "Content-Type" :content "text/html; charset=utf-8")
-              (:base :href "/")
-              (:title "Common Telemetry")
-              (:link :rel "stylesheet" :href "dist/style.css")
-              (:script :src "http://localhost:35729/livereload.js")
-              (:script :src "dist/share.js"))
-             (:body
-              :data-auth (gen-auth-token)
-              :ng-app "ctelemetryApp"
-              (:div :ng-include (cl-who:escape-string "'views/navbar.html'"))
-              (:div :class "container primary-content" :ng-view "")
-              (:div :ng-include (cl-who:escape-string "'views/common.html'"))))))))
+  (if (verify-http-auth request)
+      (wookie:send-response
+       response
+       :headers '(:content-type "text/html; charset=utf-8")
+       :body (concatenate
+              'string
+              "<!doctype html>"
+              (cl-who:with-html-output-to-string (out nil :indent t)
+                (:html
+                 (:head
+                  (:meta :http-equiv "Content-Type" :content "text/html; charset=utf-8")
+                  (:base :href "/")
+                  (:title "Common Telemetry")
+                  (:link :rel "stylesheet" :href "dist/style.css")
+                  (:script :src "http://localhost:35729/livereload.js")
+                  (:script :src "dist/share.js"))
+                 (:body
+                  :data-auth (gen-auth-token)
+                  :ng-app "ctelemetryApp"
+                  (:div :ng-include (cl-who:escape-string "'views/navbar.html'"))
+                  (:div :class "container primary-content" :ng-view "")
+                  (:div :ng-include (cl-who:escape-string "'views/common.html'")))))))
+      (require-http-auth response)))
 
 (wookie:defroute (:get "/ws-data") (req res)
   (declare (ignore res))

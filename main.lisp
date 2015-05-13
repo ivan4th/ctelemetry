@@ -27,7 +27,8 @@
   (:import-from :ctelemetry/web
                 ;; FIXME
                 #:*www-port*
-                #:*auth-key*)
+                #:*auth-key*
+                #:*http-auth*)
   (:import-from :ctelemetry/routes)
   (:use :cl :alexandria :iterate))
 
@@ -187,6 +188,11 @@
 ;; TBD: fix timestamps coming from dscope!!!!
 ;; TBD: handle telemetry-error -- and warn
 ;; TBD: check max payload size
+
+;; TBD: energy -- dose rate graph
+;; TBD: don't connect points
+
+;; TBD: разбить мощноcть дозы по энергиям
 
 #++
 (store-telemetry-event (parse-event "/zzz/qqqrr" "(\"whatever\" 1421742558.099134d0 (:cell-one 42d0 \"cell one\") (:cell-two 43d0 \"cell two\"))"))
