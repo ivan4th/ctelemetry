@@ -109,6 +109,7 @@
     (mqtt:disconnect *mqtt*)
     (setf *mqtt* nil))
   (when *mqtt-reconnect-timer*
+    (as:remove-event *mqtt-reconnect-timer*)
     (as:free-event *mqtt-reconnect-timer*)
     (setf *mqtt-reconnect-timer* nil))
   (ctelemetry/db:db-disconnect))
