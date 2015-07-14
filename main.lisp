@@ -155,7 +155,8 @@
 
 #+sbcl
 (defun save-image ()
-  #++
+  #+quicklisp
+  (ql:quickload 'swank)
   (swank::swank-require
    '(:swank-repl :swank-asdf :swank-arglists :swank-fuzzy :swank-indentation
      :swank-fancy-inspector :swank-c-p-c :swank-util :swank-presentations
@@ -168,6 +169,8 @@
    #'(lambda ()
        (load-config)
        (sb-ext:disable-debugger)
+       (ignore-errors
+        (swank:create-server :port 4005 :dont-close t))
        (setf ctelemetry/web:*public-dir*
              (merge-pathnames
               #p"public/"
