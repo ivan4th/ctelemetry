@@ -9,6 +9,7 @@
            #:store-event-value
            #:update-cell
            #:cell-history
+           #:get-history
            #:get-events
            #:get-topics))
 
@@ -107,7 +108,26 @@
      join event_values ev on e.id = ev.event_id
    where ev.cell_id = :id
    order by e.id desc
-   limit 3000")
+   limit :count")
+
+(defun get-history (&key cell-ids (count 3000))
+  (assert (every #'integerp cell-ids))
+  (cond ((null cell-ids)
+         '())
+        ((rest cell-ids)
+         (ctelemetry/db:execute-to-list
+          (with-standard-io-syntax
+            (format nil "select e.id, e.timestamp, ~:{ev~d.value~*~:^, ~} ~
+                         from events e ~
+                          ~:*~:{ join event_values ev~d on e.id = ev~:*~d.event_id and ev~:*~d.cell_id = ~d~} ~
+                         order by e.id desc ~
+                         limit :count"
+                    (iter (for cell-id in cell-ids)
+                          (for n from 1)
+                          (collect (list n cell-id)))))
+          :count count))
+        (t
+         (cell-history :id (first cell-ids) :count count))))
 
 (defun get-events (&key count topic-ids topic-pattern start)
   (assert (every #'integerp topic-ids))

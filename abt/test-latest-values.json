@@ -30,10 +30,16 @@
     "ts": 1420000040
   },
   {
+    "cells": [["cell1", 43.0e0], ["cell2", 44.0e0]],
+    "displayName": "Whatever",
+    "topic": "/more-sensors/events/whatever",
+    "ts": 1420000050
+  },
+  {
     "cells": [],
     "displayName": "No Cells",
     "topic": "/more/no-cells",
-    "ts": 1420000050
+    "ts": 1420000060
   },
   {
     "body": {
@@ -41,12 +47,22 @@
                          [
                            "/more-sensors/events/whatever",
                            "Whatever",
+                           "4+5",
+                           "cell1,cell2",
+                           "A group",
+                           2,
+                           1.42000005e9,
+                           null
+                         ],
+                         [
+                           "/more-sensors/events/whatever",
+                           "Whatever",
                            4,
                            "cell1",
                            "Cell One",
-                           1,
-                           1.42000004e9,
-                           42.0e0
+                           2,
+                           1.42000005e9,
+                           43.0e0
                          ],
                          [
                            "/more-sensors/events/whatever",
@@ -54,9 +70,9 @@
                            5,
                            "cell2",
                            "Cell Two",
-                           1,
-                           1.42000004e9,
-                           42.42e0
+                           2,
+                           1.42000005e9,
+                           44.0e0
                          ],
                          [
                            "/somesensors/temp1",

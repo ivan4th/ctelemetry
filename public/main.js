@@ -178,35 +178,61 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
       method: "GET"
     }).success(function (result) {
       // $scope.loaded = true;
-      var valueMap = {};
+      var valueMap = {},
+          cellMap = {};
       $scope.data = result.cells.map(function (item) {
-        var r = {
-          topic: item[0],
-          topicDisplayName: item[1],
-          cellId: item[2],
-          cell: item[3],
-          cellDisplayName: item[4],
-          count: item[5],
-          timestamp: getDate(item[6]),
-          value: item[7],
-          showDetails: function () {
-            var self = this;
-            console.log("cell details! " + self.cellId);
-            $modal.open({
-              templateUrl: "views/history.html",
-              controller: "HistoryWindowCtrl",
-              size: "lg",
-              resolve: {
-                cellId: function () {
-                  return self.cellId;
-                },
-                cellDisplayName: function () {
-                  return self.cellDisplayName;
-                }
+        var cell = item[3],
+            cellDisplayName = item[4],
+            isMultiCell = typeof cell == "string" && /,/.test(cell),
+            r = {
+              topic: item[0],
+              topicDisplayName: item[1],
+              cellId: item[2],
+              cell: cell,
+              cellDisplayName: cellDisplayName,
+              count: item[5],
+              timestamp: getDate(item[6]),
+              value: item[7],
+              showDetails: function () {
+                var self = this;
+                console.log("cell details! " + self.cellId);
+                if (isMultiCell)
+                  $modal.open({
+                    templateUrl: "views/multihistory.html",
+                    controller: "MultiHistoryWindowCtrl",
+                    size: "lg",
+                    resolve: {
+                      cellIds: function () {
+                        return self.cellId;
+                      },
+                      title: function () {
+                        return cellDisplayName;
+                      },
+                      cellDisplayNames: function () {
+                        return cell.split(",").map(function (cell) {
+                          return cellMap[cell] || cell;
+                        });
+                      }
+                    }
+                  });
+                else
+                  $modal.open({
+                    templateUrl: isMultiCell ? "views/multihistory.html" : "views/history.html",
+                    controller: isMultiCell ? "MultiHistoryWindowCtrl" : "HistoryWindowCtrl",
+                    size: "lg",
+                    resolve: {
+                      cellId: function () {
+                        return self.cellId;
+                      },
+                      cellDisplayName: function () {
+                        return cellDisplayName;
+                      }
+                    }
+                  });
               }
-            });
-          }
-        };
+            };
+        cellMap[cell] = cellDisplayName;
+        console.log("cell %o isMultiCell %o", cell, isMultiCell);
         valueMap[r.topic + "|||" + r.cell] = r;
         return r;
       });
@@ -306,6 +332,25 @@ angular.module("ctelemetryApp", ["ngRoute", "ui.bootstrap", "ngSanitize"])
           eventId: historyItem[0],
           timestamp: getDate(historyItem[1]),
           value: historyItem[2]
+        };
+      });
+    });
+  })
+
+  .controller("MultiHistoryWindowCtrl", function ($scope, $http, cellIds, cellDisplayNames, title, getDate) {
+    $scope.title = title;
+    $scope.cellDisplayNames = cellDisplayNames;
+    console.log("title: %o cellDisplayNames: %o", title, cellDisplayNames);
+    $http({
+      url: "/history/" + cellIds,
+      method: "GET"
+    }).success(function (result) {
+      console.log("history: %o", result);
+      $scope.history = result.history.map(function (historyItem) {
+        return {
+          eventId: historyItem[0],
+          timestamp: getDate(historyItem[1]),
+          values: historyItem.slice(2)
         };
       });
     });

@@ -23,6 +23,7 @@
                 #:*subscribe-topics*
                 #:define-section
                 #:define-topic
+                #:define-group
                 #:add-subscription-topic)
   (:import-from :ctelemetry/web
                 ;; FIXME
@@ -168,6 +169,7 @@
    :toplevel
    #'(lambda ()
        (load-config)
+       #++
        (sb-ext:disable-debugger)
        (ignore-errors
         (swank:create-server :port 4005 :dont-close t))

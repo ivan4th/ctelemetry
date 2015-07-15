@@ -24,6 +24,13 @@
                          (fake-time fixture)
                          '(:cell1 42d0 "Cell One")
                          '(:cell2 42.42d0 "Cell Two")))))
+        (list "/more-sensors/events/whatever"
+              #'(lambda (fixture)
+                  (prin1-to-string
+                   (list "Whatever"
+                         (fake-time fixture)
+                         '(:cell1 43d0 "Cell One")
+                         '(:cell2 44d0 "Cell Two")))))
         (list "/more/no-cells"
               #'(lambda (fixture)
                   (prin1-to-string
@@ -56,7 +63,9 @@
   (ctelemetry/event:define-topic "/somesensors/temp1" "Temp One"
     '(("temp1" "Temp")))
   (ctelemetry/event:define-topic "/somesensors/temp2" "Temp Two"
-    '(("temp2" "Temp"))))
+    '(("temp2" "Temp")))
+  (ctelemetry/event:define-group "/more-sensors/events/whatever" "A group"
+    '(:cell1 :cell2)))
 
 (defun elapse (duration &optional (fixture *fixture*))
   (incf (fake-time fixture) duration))
@@ -113,7 +122,9 @@
   ;; temp1
   (invoke-request :get "/history/2")
   ;; Cell One
-  (invoke-request :get "/history/4"))
+  (invoke-request :get "/history/4")
+  ;; Both cells
+  (invoke-request :get "/history/4+5"))
 
 ;; TBD: reverse log window order
 ;; TBD: (js) display new events & scroll down

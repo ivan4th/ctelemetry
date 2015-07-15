@@ -30,15 +30,22 @@
     "ts": 1420000040
   },
   {
+    "cells": [["cell1", 43.0e0], ["cell2", 44.0e0]],
+    "displayName": "Whatever",
+    "topic": "/more-sensors/events/whatever",
+    "ts": 1420000050
+  },
+  {
     "cells": [],
     "displayName": "No Cells",
     "topic": "/more/no-cells",
-    "ts": 1420000050
+    "ts": 1420000060
   },
   {
     "body": {
               "events": [
-                          [6, 1.42000005e9, 5],
+                          [7, 1.42000006e9, 5],
+                          [6, 1.42000005e9, 4],
                           [5, 1.42000004e9, 4],
                           [4, 1.42000003e9, 3],
                           [3, 1.42000002e9, 2],
@@ -74,7 +81,11 @@
   },
   {
     "body": {
-              "events": [[5, 1.42000004e9, 4], [1, 1.42e9, 1]],
+              "events": [
+                          [6, 1.42000005e9, 4],
+                          [5, 1.42000004e9, 4],
+                          [1, 1.42e9, 1]
+                        ],
               "topics": [
                           [4, "/more-sensors/events/whatever", "Whatever"],
                           [1, "/more-sensors/voltage", "voltage"]
@@ -84,7 +95,7 @@
   },
   {
     "body": {
-              "events": [[5, 1.42000004e9, 4]],
+              "events": [[6, 1.42000005e9, 4], [5, 1.42000004e9, 4]],
               "topics": [
                           [4, "/more-sensors/events/whatever", "Whatever"],
                           [1, "/more-sensors/voltage", "voltage"]
@@ -94,7 +105,7 @@
   },
   {
     "body": {
-              "events": [[5, 1.42000004e9, 4]],
+              "events": [[6, 1.42000005e9, 4], [5, 1.42000004e9, 4]],
               "topics": [
                           [4, "/more-sensors/events/whatever", "Whatever"],
                           [1, "/more-sensors/voltage", "voltage"]
@@ -118,7 +129,8 @@
   {
     "body": {
               "events": [
-                          [6, 1.42000005e9, 5],
+                          [7, 1.42000006e9, 5],
+                          [6, 1.42000005e9, 4],
                           [5, 1.42000004e9, 4],
                           [4, 1.42000003e9, 3],
                           [3, 1.42000002e9, 2]

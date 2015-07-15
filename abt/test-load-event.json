@@ -30,10 +30,16 @@
     "ts": 1420000040
   },
   {
+    "cells": [["cell1", 43.0e0], ["cell2", 44.0e0]],
+    "displayName": "Whatever",
+    "topic": "/more-sensors/events/whatever",
+    "ts": 1420000050
+  },
+  {
     "cells": [],
     "displayName": "No Cells",
     "topic": "/more/no-cells",
-    "ts": 1420000050
+    "ts": 1420000060
   },
   {
     "body": {
@@ -117,11 +123,31 @@
   },
   {
     "body": {
-              "cells": [],
+              "cells": [
+                         {
+                           "cellDisplayName": "Cell One",
+                           "cellName": "cell1",
+                           "value": 43.0e0
+                         },
+                         {
+                           "cellDisplayName": "Cell Two",
+                           "cellName": "cell2",
+                           "value": 44.0e0
+                         }
+                       ],
               "timestamp": 1.42000005e9,
+              "topic": "/more-sensors/events/whatever",
+              "topicDisplayName": "Whatever"
+            },
+    "request": "GET /event/6"
+  },
+  {
+    "body": {
+              "cells": [],
+              "timestamp": 1.42000006e9,
               "topic": "/more/no-cells",
               "topicDisplayName": "No Cells"
             },
-    "request": "GET /event/6"
+    "request": "GET /event/7"
   }
 ]

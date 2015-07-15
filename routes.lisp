@@ -24,6 +24,9 @@
             (when (< 0 n +max-id+) n))
         (parse-error ()))))
 
+(defun parse-ids (id-str)
+  (remove nil (mapcar #'parse-id (cl-ppcre:split "[ +]" id-str))))
+
 ;; FIXME
 (defun parse-event-value (value)
   (or (ignore-errors (with-standard-io-syntax
@@ -32,19 +35,47 @@
       value))
 
 (ctelemetry/web:define-route latest (:get "^/latest(/.*)?") (args)
-  (st-json:jso
-   "cells"
-   (iter (for (topic topic-display-name cell-id cell-name cell-display-name count ts value)
-          in (ctelemetry/db-commands:get-latest
-              :topic-pattern (topic-pattern (first args))))
-         (collect
-             (list topic
-                   (ctelemetry/event:topic-display-name topic topic-display-name)
-                   cell-id
-                   cell-name
-                   (ctelemetry/event:cell-display-name topic cell-name cell-display-name)
-                   count ts
-                   (parse-event-value value))))))
+  (let* ((topic-index (make-hash-table :test #'equal))
+         (cell-index (make-hash-table :test #'equal))
+         (cell-data
+           (iter (for (topic topic-display-name cell-id cell-name cell-display-name count ts value)
+                  in (ctelemetry/db-commands:get-latest
+                      :topic-pattern (topic-pattern (first args))))
+                 (setf (gethash topic topic-index)
+                       (list (ctelemetry/event:topic-display-name topic topic-display-name)
+                             count
+                             ts)
+                       (gethash (cons topic cell-name) cell-index)
+                       cell-id)
+                 (collect
+                     (list topic
+                           (ctelemetry/event:topic-display-name topic topic-display-name)
+                           cell-id
+                           cell-name
+                           (ctelemetry/event:cell-display-name topic cell-name cell-display-name)
+                           count ts
+                           (parse-event-value value)))))
+         (group-data
+           (iter (for group in (sort (hash-table-values ctelemetry/event:*groups*)
+                                #'string<
+                                :key #'ctelemetry/event:value-group-title))
+                 (let* ((topic (ctelemetry/event:value-group-topic group))
+                        (topic-info (gethash topic topic-index))
+                        (cells (iter (for cell in (ctelemetry/event:value-group-cells group))
+                                     (when-let ((cell-id (gethash (cons topic cell) cell-index)))
+                                       (collect cell-id)))))
+                   (when (and topic-info cells)
+                     (destructuring-bind (topic-display-name count ts) topic-info
+                       (collect
+                           (list topic
+                                 topic-display-name
+                                 (format nil "~{~a~^+~}" cells)
+                                 (format nil "~{~a~^,~}" (ctelemetry/event:value-group-cells group))
+                                 (ctelemetry/event:value-group-title group)
+                                 count ts
+                                 :null))))))))
+    (st-json:jso
+     "cells" (append group-data cell-data))))
 
 (ctelemetry/web:define-route log (:get "^/log(/.*)?") (args)
   (let ((topic-pattern (topic-pattern (first args))))
@@ -92,9 +123,10 @@
        "topicDisplayName" topic-display-name
        "timestamp" timestamp))))
 
-(ctelemetry/web:define-route history (:get "^/history/(\\d{1,20})") (args)
-  (when-let ((id (parse-id (first args))))
+(ctelemetry/web:define-route history (:get "^/history/(\\d{1,20}(?:[+ ]\\d{1,20})*)") (args)
+  (when-let ((ids (parse-ids (first args))))
     (st-json:jso
      "history"
-     (iter (for (event-id timestamp value) in (ctelemetry/db-commands:cell-history :id id))
-           (collect (list event-id timestamp (parse-event-value value)))))))
+     (iter (for (event-id timestamp . values)
+            in (ctelemetry/db-commands:get-history :cell-ids ids))
+           (collect (list* event-id timestamp (mapcar #'parse-event-value values)))))))

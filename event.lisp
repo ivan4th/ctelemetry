@@ -11,12 +11,17 @@
            #:*subscribe-topics*
            #:*event-broadcast-function*
            #:*current-time-function*
+           #:*groups*
            #:add-subscription-topic
+           #:value-group-topic
+           #:value-group-title
+           #:value-group-cells
            #:define-topic
            #:define-section
            #:handle-mqtt-message
            #:topic-display-name
-           #:cell-display-name))
+           #:cell-display-name
+           #:define-group))
 
 (in-package :ctelemetry/event)
 
@@ -25,6 +30,7 @@
 (defvar *cell-overrides* (make-hash-table :test #'equal))
 (defvar *sections* '())
 (defvar *subscribe-topics* '())
+(defvar *groups* (make-hash-table :test #'equal))
 (defvar *event-broadcast-function*
   #'(lambda (event)
       (declare (ignore event))
@@ -37,6 +43,11 @@
 
 (defun telemetry-error (fmt &rest args)
   (error 'telemetry-error :format-control fmt :format-arguments args))
+
+(defstruct (value-group
+            (:type list)
+            (:constructor make-value-group (topic title cells)))
+  topic title cells)
 
 (defclass telemetry-event ()
   ((topic        :accessor topic         :initarg :topic)
@@ -164,3 +175,7 @@
 
 (defun cell-display-name (topic cell-name &optional default)
   (or (gethash (cons topic cell-name) *cell-overrides*) default))
+
+(defun define-group (topic title cells)
+  (setf (gethash topic *groups*)
+        (make-value-group topic title (mapcar #'string-downcase cells))))
