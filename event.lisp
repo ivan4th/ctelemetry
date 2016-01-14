@@ -21,7 +21,8 @@
            #:handle-mqtt-message
            #:topic-display-name
            #:cell-display-name
-           #:define-group))
+           #:define-group
+           #:pull-events-from-log))
 
 (in-package :ctelemetry/event)
 
@@ -140,19 +141,21 @@
         (make-complex-telemetry-event topic parsed-payload))))
 
 (defun handle-mqtt-message (topic payload)
-  (handler-case
-      (parse-event topic payload)
-    (telemetry-error (c)
-      (warn "failed to parse event: ~a" c))
-    (:no-error (event)
-      (store-telemetry-event event)
-      (funcall *event-broadcast-function*
-               (st-json:jso
-                "topic" (topic event)
-                "displayName" (display-name event)
-                "ts" (timestamp event)
-                "cells" (iter (for (cell-name cell-value nil) in (cell-values event))
-                              (collect (list (string-downcase cell-name) cell-value))))))))
+  (if (search "/meta/" topic)
+      (warn "GOT META TOPIC: ~s" topic)
+      (handler-case
+          (parse-event topic payload)
+        (telemetry-error (c)
+          (warn "failed to parse event: ~a" c))
+        (:no-error (event)
+          (store-telemetry-event event)
+          (funcall *event-broadcast-function*
+                   (st-json:jso
+                    "topic" (topic event)
+                    "displayName" (display-name event)
+                    "ts" (timestamp event)
+                    "cells" (iter (for (cell-name cell-value nil) in (cell-values event))
+                                  (collect (list (string-downcase cell-name) cell-value)))))))))
 
 (defun add-subscription-topic (topic)
   (pushnew topic *subscribe-topics* :test #'equal))
@@ -179,3 +182,72 @@
 (defun define-group (topic title cells)
   (setf (gethash topic *groups*)
         (make-value-group topic title (mapcar #'string-downcase cells))))
+
+(defun parse-log-ts (str)
+  (i4-diet-utils:universal-time->unix-timestamp
+   (apply #'encode-universal-time
+          (reverse
+           (let ((parts (mapcar #'parse-integer
+                                (cl-ppcre:split "[^\\d]+" str))))
+             (cond ((= (length parts) 6)
+                    parts)
+                   ((> (length parts) 6)
+                    (subseq parts 0 6))
+                   (t
+                    (append parts
+                            (iter (repeat (- 6 (length parts)))
+                                  (collect 0))))))))))
+
+(defun load-from-log (log-file)
+  (let ((flexi-streams:*substitution-char* #\?)
+        (in-form-p nil)
+        (form-lines '())
+        (forms '()))
+    (flet ((flush ()
+             (when form-lines
+               (push (read-from-string (format nil "~{~a~%~}" (nreverse form-lines))) forms)
+               (setf form-lines '()))))
+      (i4-diet-utils:with-input-file (in log-file)
+        (iter (for line = (read-line in nil nil))
+              (while line)
+              (setf line (string-trim '(#\return) line))
+              (when in-form-p
+                (case (char line 0)
+                  ((#\tab #\space)
+                   (push line form-lines))
+                  (t
+                   (setf in-form-p nil)
+                   (flush))))
+              (i4-diet-utils:with-match (first-line)
+                  ("^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}:\\s+(\\(:telemetry-event)" line)
+                (setf in-form-p t form-lines (list first-line)))))
+      (flush)
+      (nreverse forms))))
+
+(defun pull-events-from-log (prefix log-file start-ts)
+  (unless (numberp start-ts)
+    (setf start-ts (parse-log-ts start-ts)))
+  (let* ((topic-pattern (concatenate 'string prefix "/%"))
+         (existing-ts-table (make-hash-table :test #'equal))
+         (topics (alist-hash-table
+                  (iter (for (topic-id topic nil) in (ctelemetry/db-commands:get-topics
+                                                      :topic-pattern topic-pattern))
+                        (collect (cons topic topic-id)))
+                  :test #'equal))
+         (loaded-events (load-from-log log-file)))
+    (iter (for (nil ts topic-id) in (ctelemetry/db-commands:get-events
+                                     :topic-pattern topic-pattern
+                                     :start start-ts
+                                     :count -1))
+          (setf (gethash (cons topic-id ts) existing-ts-table) t))
+    (iter (for item in loaded-events)
+          (let* ((msg (first (last item 3))) ; FIXME
+                 (ts (second msg))
+                 (topic (concatenate 'string prefix (lastcar item)))
+                 (topic-id (gethash topic topics)))
+            (cond ((and topic-id (gethash (cons topic-id ts) existing-ts-table))
+                   (i4-diet-utils:dbg "skip: ~s ~s" topic ts))
+                  (t
+                   (i4-diet-utils:dbg "load: ~s ~s" topic ts)
+                   (store-telemetry-event
+                    (make-complex-telemetry-event topic msg))))))))
